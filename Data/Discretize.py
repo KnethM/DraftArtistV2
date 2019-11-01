@@ -52,7 +52,7 @@ def discretize():
             finallist[countminroev] = sutden
             countminroev += 1
 
-        x.append(templist)
+        x.append(finallist)
 
     yy = indextoint(y)
     print(x)
@@ -67,3 +67,6 @@ def indextoint(list):
         else:
             newlist.append(0)
     return newlist
+
+if __name__ == '__main__':
+    discretize()
