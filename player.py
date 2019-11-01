@@ -17,16 +17,6 @@ class Player:
     def get_move(self, move_type):
         raise NotImplementedError
 
-class MinMaxPlayer(Player):
-
-    def __init__(self, draft):
-        self.draft = draft
-        self.name = 'minmax'
-    
-    def get_move(self, move_type):
-        if self.draft.if_first_move():
-            return self.get_first_move()
-
 class RandomPlayer(Player):
 
     def __init__(self, draft):
@@ -62,6 +52,22 @@ class HighestWinRatePlayer(Player):
         best_move, best_win_rate = sorted(move_win_rates, key=lambda x: x[1])[-1]
         return best_move
 
+class MinMaxPlayer(Player):
+
+    def __init__(self, draft):
+        self.draft = draft
+        self.name = 'minmax'
+        self.maxiters = 800
+    
+    def get_move(self, move_type):
+        if self.draft.if_first_move():
+            return self.get_first_move()
+        moves = self.draft.get_moves()
+        for i in range(self.maxiters):
+            if(self.draft.player == True):
+                return max(moves)
+            else:
+                return min(moves)
 
 class MCTSPlayer(Player):
 
