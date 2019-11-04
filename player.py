@@ -19,16 +19,6 @@ class Player:
     def get_move(self, move_type):
         raise NotImplementedError
 
-class MinMaxPlayer(Player):
-
-    def __init__(self, draft):
-        self.draft = draft
-        self.name = 'minmax'
-    
-    def get_move(self, move_type):
-        if self.draft.if_first_move():
-            return self.get_first_move()
-
 class RandomPlayer(Player):
 
     def __init__(self, draft):
