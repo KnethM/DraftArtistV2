@@ -1,4 +1,6 @@
 import random
+import sys
+
 from node import Node
 import logging
 import numpy
@@ -216,3 +218,18 @@ class AssocRulePlayer(Player):
         else:
             move = random.choice(R)
             return move
+
+
+
+class knnplayer(Player):
+    def __init__(self, draft):
+        self.draft = draft
+        self.name = 'knn'
+
+    def loadheroes(self):
+        sys.exit(-1)
+
+    def get_move(self, move_type):
+        if self.draft.if_first_move():
+            return self.get_first_move()
+        sys.exit(-1)
