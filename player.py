@@ -71,19 +71,18 @@ class MinMaxPlayer(Player):
 
         for i in range(self.maxiters):
             node = root
-            depth = len(node.untried_actions)
-            if(depth == 0 and node.untried_actions == []):
-                return node.select()
+            if(self.depth == 0 or node.untried_actions == []):
+                return node.wins
 
             if(self.maxPlayer):
                 value = -numpy.inf
                 for node in node.untried_actions:
-                    value = max(value, MinMaxPlayer(node, depth - 1, False, self.draft))
+                    value = max(value, MinMaxPlayer(node, self.depth - 1, False, self.draft).get_move(move_type))
                 return value
             else:
                 value = numpy.inf
                 for node in node.untried_actions:
-                    value = min(value, MinMaxPlayer(node, depth - 1, True, self.draft))
+                    value = min(value, MinMaxPlayer(node, self.depth - 1, True, self.draft).get_move(move_type))
                 return value
 
 class MCTSPlayer(Player):

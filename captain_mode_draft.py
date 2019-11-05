@@ -39,7 +39,7 @@ class Draft:
         elif player_model_str == 'hwr':
             return HighestWinRatePlayer(draft=self)
         elif player_model_str == 'minmax':
-            return MinMaxPlayer(actions=0, depth=0, maxPlayer=True, draft=self)
+            return MinMaxPlayer(actions=0, depth=20, maxPlayer=True, draft=self)
         else:
             raise NotImplementedError
 
