@@ -77,13 +77,13 @@ class MinMaxPlayer(Player):
 
             if(self.maxPlayer):
                 value = -numpy.inf
-                for c in node.untried_actions:
-                    value = max(value, MinMaxPlayer(c, depth - 1, False, self.draft))
+                for node in node.untried_actions:
+                    value = max(value, MinMaxPlayer(node, depth - 1, False, self.draft))
                 return value
             else:
                 value = numpy.inf
-                for c in node.untried_actions:
-                    value = min(value, MinMaxPlayer(c, depth - 1, True, self.draft))
+                for node in node.untried_actions:
+                    value = min(value, MinMaxPlayer(node, depth - 1, True, self.draft))
                 return value
 
 class MCTSPlayer(Player):
