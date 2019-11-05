@@ -1,4 +1,4 @@
-from player import RandomPlayer, MCTSPlayer, AssocRulePlayer, HighestWinRatePlayer
+from player import RandomPlayer, MCTSPlayer, AssocRulePlayer, HighestWinRatePlayer, KNNPlayer
 from utils.parser import parse_mcts_maxiter_c, parse_rave_maxiter_c_k
 import pickle
 import logging
@@ -38,6 +38,8 @@ class Draft:
             return AssocRulePlayer(draft=self)
         elif player_model_str == 'hwr':
             return HighestWinRatePlayer(draft=self)
+        elif player_model_str == 'knn':
+            return KNNPlayer(draft=self)
         else:
             raise NotImplementedError
 

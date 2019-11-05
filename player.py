@@ -1,6 +1,7 @@
 import random
 import sys
 
+from models.heroprofile import HeroProfile
 from node import Node
 import logging
 import numpy
@@ -211,13 +212,53 @@ class AssocRulePlayer(Player):
 
 
 
-class knnplayer(Player):
+class KNNPlayer(Player):
     def __init__(self, draft):
         self.draft = draft
         self.name = 'knn'
+        self.heroprofiles = self.loadheroes()
 
     def loadheroes(self):
-        sys.exit(-1)
+        file = open("input/heros.txt", "r").readlines()
+        heroprofiles = []
+        for line in file:
+            line = line.split("]")
+
+            line[0] = line[0].split("{")
+            line[0][1] = line[0][1].split(",")
+            id = line[0][1][0].split(":")[1]
+            name = line[0][1][2].split(":")[1]
+
+            count = 2
+            for ability in line[0][2:]:
+                line[0][count] = ability.replace("}", "")
+                count += 1
+
+            line[1] = line[1].split("{")
+
+            count = 1
+            for role in line[1][1:]:
+                line[1][count] = role.replace("}", "")
+                count += 1
+
+            line[2] = line[2].split("{")
+
+            count = 1
+            for talent in line[2][1:]:
+                line[2][count] = talent.replace("}", "")
+                count += 1
+
+            line[3] = line[3].split(',"language')[0].split("{")[1].split(",")
+
+            count = 0
+            for stat in line[3]:
+                line[3][count] = stat.replace("}", "")
+                count += 1
+
+            hero = HeroProfile(id=id, name=name, abilities=line[0][2:], roles=line[1][1:], talents=line[2][1:],
+                               stats=line[3])
+            heroprofiles.append(hero)
+        return heroprofiles
 
     def get_move(self, move_type):
         if self.draft.if_first_move():
