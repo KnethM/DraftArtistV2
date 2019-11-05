@@ -59,7 +59,7 @@ class MinMaxPlayer(Player):
         self.draft = draft
         self.actions = actions
         self.depth = depth
-        self.maxPlayer = True
+        self.maxPlayer = maxPlayer
         self.name = 'minmax'
         self.maxiters = 800
     
