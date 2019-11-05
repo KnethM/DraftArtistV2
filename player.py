@@ -1,8 +1,9 @@
 import random
 from node import Node
 import logging
-import numpy
+import numpy 
 import pickle
+import math
 
 logger = logging.getLogger('mcts')
 
@@ -54,20 +55,36 @@ class HighestWinRatePlayer(Player):
 
 class MinMaxPlayer(Player):
 
-    def __init__(self, draft):
+    def __init__(self, actions, depth, maxPlayer, draft):
         self.draft = draft
+        self.actions = actions
+        self.depth = depth
+        self.maxPlayer = True
         self.name = 'minmax'
         self.maxiters = 800
     
     def get_move(self, move_type):
         if self.draft.if_first_move():
             return self.get_first_move()
-        moves = self.draft.get_moves()
+
+        root = Node(player=self.draft.player, untried_actions=self.draft.get_moves())
+
         for i in range(self.maxiters):
-            if(self.draft.player == True):
-                return max(moves)
+            node = root
+            depth = len(node.untried_actions)
+            if(depth == 0 and node.untried_actions == []):
+                return node.select()
+
+            if(self.maxPlayer):
+                value = -numpy.inf
+                for c in node.untried_actions:
+                    value = max(value, MinMaxPlayer(c, depth - 1, False, self.draft))
+                return value
             else:
-                return min(moves)
+                value = numpy.inf
+                for c in node.untried_actions:
+                    value = min(value, MinMaxPlayer(c, depth - 1, True, self.draft))
+                return value
 
 class MCTSPlayer(Player):
 
