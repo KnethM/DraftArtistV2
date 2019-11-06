@@ -263,4 +263,25 @@ class KNNPlayer(Player):
     def get_move(self, move_type):
         if self.draft.if_first_move():
             return self.get_first_move()
+
+        player = self.draft.next_player
+        if move_type == 'ban':
+            player = player ^ 1
+        allies = self.draft.get_state(player)
+
+
+        moves = self.draft.get_moves()
+        return random.sample(moves,1)[0]
+
+
+
+
+
+
+
+
+
+
+
+
         sys.exit(-1)
