@@ -38,11 +38,14 @@ def discretize():
         #numpy array of 0's with size 123 (113 heroes + 10 player winrates)
         finallist = np.zeros((123))
 
-        # go through the list on index numbers and set their value to 1
-        findex = [templist[1], templist[2], templist[3], templist[4], templist[5], templist[11], templist[12],
-                  templist[13], templist[14], templist[15]]
-        for index in findex:
+        # go through the list on index numbers and set their value to 1 for radiant team hero picks
+        # and -1 for dire team hero picks.
+        findex1 = [templist[1], templist[2], templist[3], templist[4], templist[5]]
+        findex2 = [templist[11], templist[12], templist[13], templist[14], templist[15]]
+        for index in findex1:
             finallist[index] = 1
+        for index in findex2:
+            finallist[index] = -1
 
         # go through the list on index numbers and set their value to be equal the playerwinrate divided by 100.
         # indexcounter set to 113 as we only wanna change index 113 to 123
@@ -62,10 +65,9 @@ def discretize():
     mlpc = MLP.classifier.Dotaclf.fit(x,y)
 
     # Tries to predict the outcome of an input
-    #test1 = x[255]
-    #a = mlpc.predict(x[255].reshape(1,-1))
-
-
+    #a = mlpc.predict_proba(x[255].reshape(1,-1))[0,1]
+    #print(a)
+ 
 # Går gennem listen og ændre alle "true" til 1 og "false" til 0
 def indextoint(list):
     newlist = []
