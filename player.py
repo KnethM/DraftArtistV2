@@ -238,8 +238,22 @@ class KNNPlayer(Player):
 
             count = 1
             for role in line[1][1:]:
-                line[1][count] = role.replace("}", "")
+                s = role.replace("}", "").split(",")
+                switcher ={
+                    0: "Carry",
+                    1: "Escape",
+                    2: "nuker",
+                    3: "initiator",
+                    4: "durable",
+                    5: "disabler",
+                    6: "jungler",
+                    7: "support",
+                    8: "pusher"
+                }
+                s = ",".join(s[0:3])
+                line[1][count] = s + ',"rolename":' + switcher.get(int(role[9]))
                 count += 1
+
 
             line[2] = line[2].split("{")
 
@@ -269,19 +283,32 @@ class KNNPlayer(Player):
             player = player ^ 1
         allies = self.draft.get_state(player)
 
+        #what can allyes do?
+        #what synagises with their abilies?
+        #what is missing on the team?
 
         moves = self.draft.get_moves()
+        if len(allies) == 0:
+            with open('models/hero_win_rates.pickle', 'rb') as f:
+                self.win_rate_dist = pickle.load(f)
+            move_win_rates = [(m, self.win_rate_dist[m]) for m in moves]
+            best_move, best_win_rate = sorted(move_win_rates, key=lambda x: x[1])[-1]
+            return best_move
+
+        perfekt = self.perfekt(allies)
+
+
+
+
+
         return random.sample(moves,1)[0]
 
+    def perfekt(self, allies):
+        allieprofiles=[]
+        for hero in self.heroprofiles:
+            if int(hero.ID) in allies:
+                allieprofiles.append(hero)
 
 
 
-
-
-
-
-
-
-
-
-        sys.exit(-1)
+        return 1
