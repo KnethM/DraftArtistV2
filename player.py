@@ -217,6 +217,9 @@ class KNNPlayer(Player):
         self.draft = draft
         self.name = 'knn'
         self.heroprofiles = self.loadheroes()
+        self.player = open("input/heroes.json", "r").readline()
+        self.allroles = ["Carry", "Escape", "nuker", "initiator", "durable", "disabler", "jungler", "support", "pusher"]
+        self.k = 5
 
     def loadheroes(self):
         file = open("input/heros.txt", "r").readlines()
@@ -297,18 +300,36 @@ class KNNPlayer(Player):
 
         perfekt = self.perfekt(allies)
 
+        rating = []
+        for hero in self.heroprofiles:
+            if int(hero.ID) in moves:
+                roles = []
+                for role in hero.Roles:
+                    roles.append(role.split(",")[-1].split(":")[-1])
+                rating.append((hero.ID, len(self.intersection(roles, perfekt.Roles))))
+        rating = sorted(rating, key=lambda x: x[-1])[-self.k:]
+        return int(random.sample(rating, 1)[0][0])
 
 
-
-
-        return random.sample(moves,1)[0]
+    def intersection(self, lst1, lst2):
+        lst3 = [value for value in lst1 if value in lst2]
+        return lst3
 
     def perfekt(self, allies):
         allieprofiles=[]
         for hero in self.heroprofiles:
             if int(hero.ID) in allies:
                 allieprofiles.append(hero)
+        roles = self.extractroles(allieprofiles)
 
+        return HeroProfile(id=0, name="", abilities=[], roles=roles, talents=[],
+                               stats=[])
 
-
-        return 1
+    def extractroles(self,profiles):
+        all = self.allroles.copy()
+        for profile in profiles:
+            for role in profile.Roles:
+                role = role.split(",")[-1].split(":")[-1]
+                if role in all:
+                    all.remove(role)
+        return all
