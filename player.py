@@ -217,6 +217,8 @@ class KNNPlayer(Player):
         self.draft = draft
         self.name = 'knn'
         self.heroprofiles = self.loadheroes()
+        self.allroles = ["Carry", "Escape", "nuker", "initiator", "durable", "disabler", "jungler", "support", "pusher"]
+        self.k = 5
 
     def loadheroes(self):
         file = open("input/heros.txt", "r").readlines()
@@ -238,8 +240,22 @@ class KNNPlayer(Player):
 
             count = 1
             for role in line[1][1:]:
-                line[1][count] = role.replace("}", "")
+                s = role.replace("}", "").split(",")
+                switcher ={
+                    0: "Carry",
+                    1: "Escape",
+                    2: "nuker",
+                    3: "initiator",
+                    4: "durable",
+                    5: "disabler",
+                    6: "jungler",
+                    7: "support",
+                    8: "pusher"
+                }
+                s = ",".join(s[0:3])
+                line[1][count] = s + ',"rolename":' + switcher.get(int(role[9]))
                 count += 1
+
 
             line[2] = line[2].split("{")
 
@@ -257,10 +273,79 @@ class KNNPlayer(Player):
 
             hero = HeroProfile(id=id, name=name, abilities=line[0][2:], roles=line[1][1:], talents=line[2][1:],
                                stats=line[3])
+
             heroprofiles.append(hero)
         return heroprofiles
 
     def get_move(self, move_type):
         if self.draft.if_first_move():
             return self.get_first_move()
-        sys.exit(-1)
+
+        player = self.draft.next_player
+        if move_type == 'ban':
+            player = player ^ 1
+        allies = self.draft.get_state(player)
+
+        #what can allyes do?
+        #what synagises with their abilies?
+        #what is missing on the team?
+
+        moves = self.draft.get_moves()
+        if len(allies) == 0:
+            with open('models/hero_win_rates.pickle', 'rb') as f:
+                self.win_rate_dist = pickle.load(f)
+            move_win_rates = [(m, self.win_rate_dist[m]) for m in moves]
+            best_move, best_win_rate = sorted(move_win_rates, key=lambda x: x[1])[-1]
+            return best_move
+
+        perfekt = self.perfekt(allies)
+
+        rating = []
+        for hero in self.heroprofiles:
+            if int(hero.ID) in moves:
+                roles = []
+                for role in hero.Roles:
+                    roles.append(role.split(",")[-1].split(":")[-1])
+                rating.append((hero.ID, len(self.intersection(roles, perfekt.Roles))))
+        rating = sorted(rating, key=lambda x: x[-1])[-self.k:]
+
+        return self.findbest(rating, self.draft.getcontroller())
+
+
+    def findbest(self, rating, player):
+        newrating = []
+        for hero in player:
+            hero = hero.replace('"', '').split(',')
+            id = hero[0].split(':')
+            for rated in rating:
+                if rated[0] == id[1]:
+                    winrate = 0
+                    if int(hero[2].split(':')[1]) != 0:
+                        winrate = float(hero[3].split(':')[1])/float(hero[2].split(':')[1])
+                    newrating.append((id[1], winrate*rated[1]))
+        if len(newrating) == 0:
+            return int(random.sample(rating, 1)[0][0])
+        return int(max(newrating)[0])
+
+    def intersection(self, lst1, lst2):
+        lst3 = [value for value in lst1 if value in lst2]
+        return lst3
+
+    def perfekt(self, allies):
+        allieprofiles=[]
+        for hero in self.heroprofiles:
+            if int(hero.ID) in allies:
+                allieprofiles.append(hero)
+        roles = self.extractroles(allieprofiles)
+
+        return HeroProfile(id=0, name="", abilities=[], roles=roles, talents=[],
+                               stats=[])
+
+    def extractroles(self,profiles):
+        all = self.allroles.copy()
+        for profile in profiles:
+            for role in profile.Roles:
+                role = role.split(",")[-1].split(":")[-1]
+                if role in all:
+                    all.remove(role)
+        return all
