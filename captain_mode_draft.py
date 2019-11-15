@@ -21,6 +21,7 @@ class Draft:
             # player 0 will pick first and be red team; player 1 will pick next and be blue team
             self.player_models = [self.construct_player_model(p0_model_str),
                                   self.construct_player_model(p1_model_str)]
+            self.controllers = [self.load_red_controllers(), self.load_blue_controllers()]
 
     def get_state(self, player):
         return self.state[player]
@@ -49,6 +50,28 @@ class Draft:
             # M is the number of champions
             outcome_model, M = pickle.load(f)
         return outcome_model, M
+
+    def load_red_controllers(self):
+        try:
+            con1 = open("input/red/player1.txt", "r").readlines()
+            con2 = open("input/red/player2.txt", "r").readlines()
+            con3 = open("input/red/player3.txt", "r").readlines()
+            con4 = open("input/red/player4.txt", "r").readlines()
+            con5 = open("input/red/player5.txt", "r").readlines()
+            return [con1, con2, con3, con4, con5]
+        except:
+            return []
+
+    def load_blue_controllers(self):
+        try:
+            con1 = open("input/blue/player1.txt", "r").readlines()
+            con2 = open("input/blue/player2.txt", "r").readlines()
+            con3 = open("input/blue/player3.txt", "r").readlines()
+            con4 = open("input/blue/player4.txt", "r").readlines()
+            con5 = open("input/blue/player5.txt", "r").readlines()
+            return [con1, con2, con3, con4, con5]
+        except:
+            return []
 
     def eval(self):
         assert self.end()
@@ -148,3 +171,15 @@ class Draft:
         logger = logging.getLogger('mcts')
         logger.warning(move_str)
         return move_str
+
+    def getcontroller(self):
+        pickrounds = [3,4,7,8,10]
+        player = self.next_player
+        if player == 0:
+            if self.move_cnt[0] in pickrounds:
+                return self.controllers[0][pickrounds.index(self.move_cnt[0])]
+        else:
+            if self.move_cnt[1] in pickrounds:
+                return self.controllers[1][pickrounds.index(self.move_cnt[1])]
+        return []
+

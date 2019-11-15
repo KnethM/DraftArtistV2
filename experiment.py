@@ -43,10 +43,10 @@ if __name__ == '__main__':
     kwargs = parse_mcts_exp_parameters()
     # possible player string: random, hwr, mcts_maxiter_c, assocrule
     # red team
-    p0_model_str = 'mcts_800_0.33' if not kwargs else kwargs.p0
+    p0_model_str = 'knn' if not kwargs else kwargs.p0
     # blue team
-    p1_model_str = 'mcts_800_0.5' if not kwargs else kwargs.p1
-    num_matches = 30 if not kwargs else kwargs.num_matches
+    p1_model_str = 'assocrule' if not kwargs else kwargs.p1
+    num_matches = 1 if not kwargs else kwargs.num_matches
 
     red_team_win_rates, times = [], []
     for i in range(num_matches):
