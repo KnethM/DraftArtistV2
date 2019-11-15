@@ -123,3 +123,4 @@ DraftArtist-master/.vscode/settings.json
 .idea/workspace.xml
 .idea/DraftArtist.iml
 .idea/inspectionProfiles/Project_Default.xml
+.vscode/launch.json
