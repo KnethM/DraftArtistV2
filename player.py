@@ -295,8 +295,8 @@ class KNNPlayer(Player):
                 roles = []
                 for role in hero.Roles:
                     roles.append(role.split(",")[-1].split(":")[-1])
-                rating.append((hero.ID, numpy.sqrt(len(self.intersection(roles, perfekt.Roles))-len(perfekt.Roles))))
-        rating = sorted(rating, key=lambda x: x[-1])[-self.k:]
+                rating.append((hero.ID, numpy.sqrt(abs(len(self.intersection(roles, perfekt.Roles))-len(perfekt.Roles)))))
+        rating = sorted(rating, key=lambda x: x[-1])[:5]
 
         return self.findbest(rating, self.draft.getcontroller())
 
@@ -311,10 +311,12 @@ class KNNPlayer(Player):
                     winrate = 0
                     if int(hero[2].split(':')[1]) != 0:
                         winrate = float(hero[3].split(':')[1])/float(hero[2].split(':')[1])
-                    newrating.append((id[1], winrate*rated[1]))
+                    if winrate == 0:
+                        winrate = 1
+                    newrating.append((id[1], rated[1]/winrate))
         if len(newrating) == 0:
             return int(random.sample(rating, 1)[0][0])
-        return int(self.maxintuble(newrating)[0])
+        return int(self.minintuble(newrating)[0])
 
     def intersection(self, lst1, lst2):
         lst3 = [value for value in lst1 if value in lst2]
@@ -342,9 +344,9 @@ class KNNPlayer(Player):
                     all.remove(role)
         return all
 
-    def maxintuble(self, list):
+    def minintuble(self, list):
         best = list[0]
         for tuble in list[1:]:
-            if best[1] < tuble[1]:
+            if best[1] > tuble[1]:
                 best = tuble
         return best
