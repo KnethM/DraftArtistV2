@@ -287,13 +287,6 @@ class KNNPlayer(Player):
         allies = self.draft.get_state(player)
 
         moves = self.draft.get_moves()
-        if len(allies) == 0:
-            with open('models/hero_win_rates.pickle', 'rb') as f:
-                self.win_rate_dist = pickle.load(f)
-            move_win_rates = [(m, self.win_rate_dist[m]) for m in moves]
-            best_move, best_win_rate = sorted(move_win_rates, key=lambda x: x[1])[-1]
-            return best_move
-
         perfekt = self.perfekt(allies)
 
         rating = []
@@ -329,6 +322,9 @@ class KNNPlayer(Player):
 
     def perfekt(self, allies):
         allieprofiles=[]
+        if allies == []:
+            return HeroProfile(id=0, name="", abilities=[], roles=self.allroles, talents=[],
+                               stats=[])
         for hero in self.heroprofiles:
             if int(hero.ID) in allies:
                 allieprofiles.append(hero)
