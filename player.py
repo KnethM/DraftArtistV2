@@ -1,5 +1,5 @@
 import random
-import sys
+import math
 
 from models.heroprofile import HeroProfile
 from node import Node
@@ -213,12 +213,12 @@ class AssocRulePlayer(Player):
 
 
 class KNNPlayer(Player):
-    def __init__(self, draft):
+    def __init__(self, draft, k):
         self.draft = draft
         self.name = 'knn'
         self.heroprofiles = self.loadheroes()
         self.allroles = ["Carry", "Escape", "nuker", "initiator", "durable", "disabler", "jungler", "support", "pusher"]
-        self.k = 5
+        self.k = k
 
     def loadheroes(self):
         file = open("input/heros.txt", "r").readlines()
@@ -286,10 +286,6 @@ class KNNPlayer(Player):
             player = player ^ 1
         allies = self.draft.get_state(player)
 
-        #what can allyes do?
-        #what synagises with their abilies?
-        #what is missing on the team?
-
         moves = self.draft.get_moves()
         if len(allies) == 0:
             with open('models/hero_win_rates.pickle', 'rb') as f:
@@ -306,7 +302,7 @@ class KNNPlayer(Player):
                 roles = []
                 for role in hero.Roles:
                     roles.append(role.split(",")[-1].split(":")[-1])
-                rating.append((hero.ID, len(self.intersection(roles, perfekt.Roles))))
+                rating.append((hero.ID, numpy.sqrt(len(self.intersection(roles, perfekt.Roles))-len(perfekt.Roles))))
         rating = sorted(rating, key=lambda x: x[-1])[-self.k:]
 
         return self.findbest(rating, self.draft.getcontroller())
