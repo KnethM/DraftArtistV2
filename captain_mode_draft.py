@@ -39,8 +39,8 @@ class Draft:
             return AssocRulePlayer(draft=self)
         elif player_model_str == 'hwr':
             return HighestWinRatePlayer(draft=self)
-        elif player_model_str == 'knn':
-            return KNNPlayer(draft=self)
+        elif player_model_str.split("_")[0] == 'knn':
+            return KNNPlayer(draft=self, k=int(player_model_str.split("_")[1]))
         else:
             raise NotImplementedError
 

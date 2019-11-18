@@ -41,9 +41,9 @@ if __name__ == '__main__':
     logger.setLevel(logging.WARNING)
 
     kwargs = parse_mcts_exp_parameters()
-    # possible player string: random, hwr, mcts_maxiter_c, assocrule
+    # possible player string: random, hwr, mcts_maxiter_c, assocrule ,knn_k
     # red team
-    p0_model_str = 'knn' if not kwargs else kwargs.p0
+    p0_model_str = 'knn_5' if not kwargs else kwargs.p0
     # blue team
     p1_model_str = 'assocrule' if not kwargs else kwargs.p1
     num_matches = 1 if not kwargs else kwargs.num_matches
