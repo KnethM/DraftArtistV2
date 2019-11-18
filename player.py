@@ -325,7 +325,7 @@ class KNNPlayer(Player):
                     newrating.append((id[1], winrate*rated[1]))
         if len(newrating) == 0:
             return int(random.sample(rating, 1)[0][0])
-        return int(max(newrating)[0])
+        return int(self.maxintuble(newrating)[0])
 
     def intersection(self, lst1, lst2):
         lst3 = [value for value in lst1 if value in lst2]
@@ -349,3 +349,10 @@ class KNNPlayer(Player):
                 if role in all:
                     all.remove(role)
         return all
+
+    def maxintuble(self, list):
+        best = list[0]
+        for tuble in list[1:]:
+            if best[1] < tuble[1]:
+                best = tuble
+        return best
