@@ -99,26 +99,52 @@ class MF():
         return mf.b + mf.b_u[:, np.newaxis] + mf.b_i[np.newaxis:, ] + mf.P.dot(mf.Q.T)
 
 
-values1 = randint(0, 113, 20)
+player = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+
+def getPlayer(player):
+    return player
+
+
+randval1 = randint(0, 2, 20)
+randval2 = randint(0, 2, 19)
+randval3 = randint(0, 2, 19)
+values1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+values2 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+values3 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+val = 0
+
+
+def randomValue(x, y):
+    return randint(x, y)
+
+
+for x in range(0, 20):
+    if randval1[x] == 1:
+        val = randomValue(1, 113)
+        if val not in values1:
+            values1[x] = val
+    else:
+        values1[x] = 0
 print(values1)
-values2 = randint(0, 113, 20)
+
+for x in range(1, 19):
+    if randval2[x] == 1:
+        val = randomValue(1, 113)
+        if val not in values2:
+            values2[x] = val
+    else:
+        values2[x] = 0
 print(values2)
-values3 = randint(0, 113, 20)
+
+for x in range(1, 19):
+    if randval3[x] == 1:
+        val = randomValue(1, 113)
+        if val not in values3:
+            values3[x] = val
+    else:
+        values3[x] = 0
 print(values3)
-values4 = randint(0, 113, 20)
-print(values4)
-values5 = randint(0, 113, 20)
-print(values5)
-values6 = randint(0, 113, 20)
-print(values6)
-values7 = randint(0, 113, 20)
-print(values7)
-values8 = randint(0, 113, 20)
-print(values8)
-values9 = randint(0, 113, 20)
-print(values9)
-values10 = randint(0, 113, 20)
-print(values10)
 
 R = np.array([
     [values1[0], values1[1], values1[2], values1[3], values1[4], values1[5], values1[6],
@@ -146,23 +172,36 @@ print(mf.b_u)
 print()
 print("Item bias:")
 print(mf.b_i)
-"""
-    [111, 0, 0, 11, 0, 112, 0, 0, 91, 41, 31, 71, 0, 0, 17, 21, 0, 61, 0, 1],
-    [111, 0, 0, 11, 0, 112, 0, 0, 91, 41, 31, 71, 0, 0, 17, 21, 0, 61, 0, 1],
 
-    [1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1],
-    [1, 0, 0, 1, 0, 1, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 1, 0, 1],
-    
-    [1, 0, 3, 4, 5, 6, 0, 8, 9, 10],
-    [1, 2, 0, 4, 5, 6, 7, 0, 9, 10],
-    [1, 2, 3, 0, 5, 6, 7, 8, 0, 10],
-    [1, 2, 3, 4, 0, 6, 7, 8, 9, 0],
-    [0, 2, 3, 4, 5, 0, 7, 8, 9, 10],
-    [1, 0, 3, 4, 5, 6, 0, 8, 9, 10],
-    [1, 2, 0, 4, 5, 6, 7, 0, 9, 10],
-    [1, 2, 3, 0, 5, 6, 7, 8, 0, 10],
-    [1, 2, 3, 4, 0, 6, 7, 8, 9, 0],
-    [0, 2, 0, 4, 0, 6, 0, 8, 0, 10],
-    
-    [10, 50, 0, 71, 0, 12, 100, 0, 19, 104, 67, 0, 86, 0, 7, 45, 9, 0, 2, 0],
-"""
+
+test = mf.full_matrix()
+test1 = test[0]
+test11 = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1]
+
+
+def lowerValue(x, count):
+    for y in range(1, len(test11)):
+        if int(test1[x] - y) not in test11 and int(test1[x] - y) > 0 and count == 0:
+            return int(test1[x]) - y
+
+
+def higherValue(x, count):
+    for y in range(1, len(test11)):
+        if int(test1[x] + y) not in test11 and int(test1[x] + y) < 113 and count == 0:
+            return int(test1[x]) + y
+
+
+for x in range(0, len(test1)):
+    count = 0
+    if int(test1[x]) not in test11 and int(test1[x]) < 113:
+        test11[x] = int(test1[x])
+    elif int(test1[x]) == 112 and int(test1[x]) in test11:
+        test11[x] = lowerValue(x, count)
+        count = 1
+    elif int(test1[x]) in test11:
+        test11[x] = higherValue(x, count)
+        count = 1
+
+print()
+print("Test")
+print(test11)
