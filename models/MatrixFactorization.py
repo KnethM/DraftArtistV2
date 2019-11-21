@@ -15,6 +15,8 @@ class MF():
         - K (int)       : number of latent dimensions
         - alpha (float) : learning rate
         - beta (float)  : regularization parameter
+
+        https://nbviewer.jupyter.org/github/albertauyeung/matrix-factorization-in-python/blob/master/mf.ipynb
         """
 
         self.R = R
@@ -99,19 +101,41 @@ class MF():
         return mf.b + mf.b_u[:, np.newaxis] + mf.b_i[np.newaxis:, ] + mf.P.dot(mf.Q.T)
 
 
-player = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+player1 = [1, 3, 5]
+player2 = [22, 7, 12]
+player3 = [73, 9, 10]
+player4 = [44, 2, 18]
+player5 = [55, 15, 20]
+playerList = [player1, player2, player3, player4, player5]
+
+def winrateSort(objt):
+    objt.sort(key=lambda x: x[3])
+    objt.reverse()
+    return objt
 
 
-def getPlayer(player):
-    return player
+def calWinRate(player):
+    player2 = []
+    for x in range(0, len(player)):
+        winrate = player[x][1]/player[x][2]
+        player2 += [player[x] + [winrate]]
+    winrateSort(player2)
+    return player2
 
 
-randval1 = randint(0, 2, 20)
+playerList = calWinRate(playerList)
+
+
+def getPlayerID(player, x):
+    return player[x][0]
+
+
+randval1 = randint(0, 2, 19)
 randval2 = randint(0, 2, 19)
 randval3 = randint(0, 2, 19)
-values1 = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-values2 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-values3 = [1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+values1 = [getPlayerID(playerList, 0), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+values2 = [getPlayerID(playerList, 1), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+values3 = [getPlayerID(playerList, 2), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 val = 0
 
 
@@ -119,7 +143,7 @@ def randomValue(x, y):
     return randint(x, y)
 
 
-for x in range(0, 20):
+for x in range(1, 19):
     if randval1[x] == 1:
         val = randomValue(1, 113)
         if val not in values1:
