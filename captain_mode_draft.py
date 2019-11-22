@@ -1,4 +1,4 @@
-from player import RandomPlayer, MCTSPlayer, AssocRulePlayer, HighestWinRatePlayer, MinMaxPlayer
+from player import RandomPlayer, MCTSPlayer, AssocRulePlayer, HighestWinRatePlayer, MinMaxPlayer, MinMaxPlayerV2
 from utils.parser import parse_mcts_maxiter_c, parse_rave_maxiter_c_k
 import pickle
 import logging
@@ -39,6 +39,8 @@ class Draft:
             return HighestWinRatePlayer(draft=self)
         elif player_model_str == 'minmax':
             return MinMaxPlayer(actions=0, depth=20, maxPlayer=True, draft=self)
+        elif player_model_str == 'minmaxV2':
+            return MinMaxPlayerV2(actions=0, depth=20, maxPlayer=True, draft=self)
         else:
             raise NotImplementedError
 

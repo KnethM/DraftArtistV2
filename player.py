@@ -55,7 +55,7 @@ class HighestWinRatePlayer(Player):
         best_move, best_win_rate = sorted(move_win_rates, key=lambda x: x[1])[-1]
         return best_move
 
-class MinMaxPlayer(Player):
+class MinMaxPlayerV2(Player):
 
     def __init__(self, actions, depth, maxPlayer, draft):
         self.depth = depth
@@ -64,14 +64,14 @@ class MinMaxPlayer(Player):
         self.name = 'minmaxV2'
         self.winrates = self.getwinrate()
         self.executor = cf.ThreadPoolExecutor(max_workers=20)
-        self.curdepth = 3
+        self.curdepth = 2
         self.reverseprocesses = []
 
     def get_move(self, move_type):
         if self.draft.if_first_move():
             return self.get_first_move()
         root = Node(player=self.draft.player, untried_actions=self.draft.get_moves())
-        _, pick = self.minmax_tree(deepcopy(root.untried_actions), self.curdepth, True, move_type, 0)
+        _, pick = self.minmax_tree(deepcopy(root.untried_actions), 2, True, move_type, 0)
         return pick
 
     def minmax_tree(self, untried_actions, depth, maxP, move_type, action):
@@ -82,27 +82,28 @@ class MinMaxPlayer(Player):
         processes = []
         choice = 0
         if depth != 0:
-            for i in range(0, len(untried_actions)):
-                if i in untried_actions:
-                    temp = deepcopy(untried_actions)
-                    temp.discard(i)
-                    if maxP:
-                        if depth == self.curdepth:
-                            processes.append(self.executor.submit(self.minmax_tree, temp, depth-1, False, move_type, i))
+            with cf.ThreadPoolExecutor(max_workers=6) as executor:
+                for i in range(0, len(untried_actions)):
+                    if i in untried_actions:
+                        temp = deepcopy(untried_actions)
+                        temp.discard(i)
+                        if maxP:
+                            #if depth == self.curdepth:
+                           processes.append(executor.submit(self.minmax_tree, temp, depth-1, False, move_type, i))
+                            #else:
+                            #    newval, choice = self.minmax_tree(temp, depth-1, False, move_type, i)
+                            #    if value < newval:
+                            #        choice = i
+                            #        value = newval
                         else:
-                            newval, choice = self.minmax_tree(temp, depth-1, False, move_type, i)
-                            if value < newval:
-                                choice = i
-                                value = newval
-                    else:
-                        if depth == self.curdepth:
-                            processes.append(self.executor.submit(self.minmax_tree, temp, depth-1, True, move_type, i))
-                        else:
-                            newval, newchoice = self.minmax_tree(temp, depth-1, True, move_type, i)
-                            if value > newval:
-                                choice = i
-                                value = newval
-            if depth == self.curdepth:
+                            #if depth == self.curdepth:
+                            processes.append(executor.submit(self.minmax_tree, temp, depth-1, True, move_type, i))
+                            #else:
+                            #    newval, newchoice = self.minmax_tree(temp, depth-1, True, move_type, i)
+                            #    if value > newval:
+                            #        choice = i
+                            #        value = newval
+                #if depth == self.curdepth:
                 for proc in cf.as_completed(processes):
                     processes.remove(proc)
                     val, newchoice = proc.result()
@@ -114,7 +115,7 @@ class MinMaxPlayer(Player):
                         if value > val:
                             value = val
                             choice = newchoice
-            return value, choice
+                return value, choice
         else:
             return self.eval(move_type, action), action
 
@@ -161,7 +162,7 @@ class MinMaxPlayer(Player):
                 dictionary = {}
         return dict
 
-class MinMaxPlayerV2(Player):
+class MinMaxPlayer(Player):
 
     def __init__(self, actions, depth, maxPlayer, draft):
         self.draft = draft
