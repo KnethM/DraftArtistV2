@@ -4,7 +4,6 @@ import pickle
 import logging
 import numpy as np
 
-
 class Draft:
     """
     class handling state of the draft
@@ -44,7 +43,7 @@ class Draft:
             raise NotImplementedError
 
     def load(self, env_path):
-        with open('models/{}'.format(env_path), 'rb') as f:
+        with open('DraftArtistV2/models/{}'.format(env_path), 'rb') as f:
             # outcome model predicts the red team's  win rate
             # M is the number of champions
             outcome_model, M = pickle.load(f)

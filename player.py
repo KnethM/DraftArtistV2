@@ -3,15 +3,17 @@ from node import Node
 import logging
 import numpy 
 import pickle
-import math
-
+from os import listdir
+from copy import deepcopy
+import concurrent.futures as cf
+import threading as thread
 logger = logging.getLogger('mcts')
 
 
 class Player:
 
     def get_first_move(self):
-        with open('models/hero_freqs.pickle', 'rb') as f:
+        with open('DraftArtistV2/models/hero_freqs.pickle', 'rb') as f:
             a, p = pickle.load(f)
             return numpy.random.choice(a, size=1, p=p)[0]
 
@@ -56,33 +58,142 @@ class HighestWinRatePlayer(Player):
 class MinMaxPlayer(Player):
 
     def __init__(self, actions, depth, maxPlayer, draft):
+        self.depth = depth
+        self.maxPlayer = maxPlayer
+        self.draft = draft
+        self.name = 'minmaxV2'
+        self.winrates = self.getwinrate()
+        self.executor = cf.ThreadPoolExecutor(max_workers=20)
+
+    def get_move(self, move_type):
+        if self.draft.if_first_move():
+            return self.get_first_move()
+        root = Node(player=self.draft.player, untried_actions=self.draft.get_moves())
+        _, pick = self.minmax_tree(deepcopy(root.untried_actions), 3, True, move_type, 0)
+        return pick
+
+    def minmax_tree(self, untried_actions, depth, maxP, move_type, action):
+        if maxP:
+            value = -numpy.inf
+        else:
+            value = numpy.inf
+        processes = []
+        choice = 0
+        if depth != 0:
+            for i in range(0, len(untried_actions)):
+                if i in untried_actions:
+                    temp = deepcopy(untried_actions)
+                    temp.discard(i)
+                    if maxP:
+                        processes.append(self.executor.submit(self.minmax_tree, temp, depth-1, False, move_type, i))
+                        #newval, choice = self.minmax_tree(temp, depth-1, False, move_type, i)
+                        #if value < newval:
+                        #    choice = i
+                        #    value = newval
+                    else:
+                        processes.append(self.executor.submit(self.minmax_tree, temp, depth-1, True, move_type, i))
+                        #newval, newchoice = self.minmax_tree(temp, depth-1, True, move_type, i)
+                        #if value > newval:
+                        #    choice = i
+                        #    value = newval
+            for proc in cf.as_completed(processes):
+                processes.remove(proc)
+                val, newchoice = proc.result()
+                if maxP:
+                    if value < val:
+                        value = val
+                        choice = newchoice
+                else:
+                    if value > val:
+                        value = val
+                        choice = newchoice
+            return value, choice
+        else:
+            return self.eval(move_type, action), action
+
+    def eval(self, move_type, action):
+        if move_type == 'ban':
+            winrate = 0
+            for val in range(5, 10):
+                try:
+                    person = self.winrates[val]
+                    winrate += person[str(action)]
+                except:
+                    winrate += 0
+        else:
+            winrate = 0
+            for val in range(0, 5):
+                try:
+                    person = self.winrates[val]
+                    winrate += person[str(action)]
+                except:
+                    winrate += 0
+        if winrate == 0:
+            return -500
+        else:
+            return winrate/5
+
+    def getwinrate(self):
+        path = "DraftArtistV2\Data\People"
+        filelist = listdir(path)
+        dict = []
+        lst = []
+        dictionary = {}
+        for files in filelist:
+            with open(path+"\\"+files, "r") as file:
+                for lines in file.readlines():
+                    lines = lines.split(" ")
+                    heroid = lines[1].replace(',', '').replace("'", "")
+                    win = int(lines[7].replace(',', ''))
+                    games = int(lines[5].replace(',', ''))
+                    try:
+                        dictionary[heroid] = (win/games)
+                    except:
+                        dictionary[heroid] = 0
+                dict.append(dictionary)
+                dictionary = {}
+        return dict
+
+class MinMaxPlayerV2(Player):
+
+    def __init__(self, actions, depth, maxPlayer, draft):
         self.draft = draft
         self.actions = actions
         self.depth = depth
         self.maxPlayer = maxPlayer
         self.name = 'minmax'
         self.maxiters = 800
-    
+        self.tree = None
+
+    def build_minmax_tree(self, root, node, depth, player):
+        if (depth >= 20):
+            return root
+        for i in range(0, len(node.untried_actions)):
+            if i in node.untried_actions:
+                c = node.expand(i, player, self.draft.get_moves())
+                c.untried_actions.discard(i)
+        for child in node.children:
+            self.build_minmax_tree(root, child, depth+1, player)
+
     def get_move(self, move_type):
         if self.draft.if_first_move():
             return self.get_first_move()
 
         root = Node(player=self.draft.player, untried_actions=self.draft.get_moves())
-
+        self.tree = self.build_minmax_tree(root, root, 0, self.draft.player)
         for i in range(self.maxiters):
             node = root
             if(self.depth == 0 or node.untried_actions == []):
                 return node.wins
-
             if(self.maxPlayer):
                 value = -numpy.inf
-                for node in node.untried_actions:
-                    value = max(value, MinMaxPlayer(node, self.depth - 1, False, self.draft).get_move(move_type))
+                for action in node.untried_actions:
+                    value = max(value, MinMaxPlayer(action, self.depth - 1, False, self.draft).get_move(move_type))
                 return value
             else:
                 value = numpy.inf
-                for node in node.untried_actions:
-                    value = min(value, MinMaxPlayer(node, self.depth - 1, True, self.draft).get_move(move_type))
+                for action in node.untried_actions:
+                    value = min(value, MinMaxPlayer(action, self.depth - 1, True, self.draft).get_move(move_type))
                 return value
 
 class MCTSPlayer(Player):
