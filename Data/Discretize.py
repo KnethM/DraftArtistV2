@@ -1,5 +1,7 @@
 import numpy as np
+from models import MLPclass as MLP
 
+# Method for discretizing the data even further by cleaning it up and abstracting the numbers.
 def discretize():
 
     f = open("DiscretizedData.txt", "r")
@@ -7,22 +9,20 @@ def discretize():
     fl = f.readlines()
 
     # Lists used to store the final information about matches
-    # x contains hero picks and winrates, y contains if radiant won or lost.
+    # x contains hero picks and winrates, y contains radiant win or loss
     x = []
     y = []
 
     for match in fl:
         templist = []
 
-        # Go through the list and remove any occurencess of [] , '
-        remove = "[],'"
-        trantab = match.maketrans("", "", remove)
-        mstring = match.translate(trantab)
+        matchstring = removefromstring(match, "[],'")
 
         # Go through the list and replace any occurence of "Null" with "0" then split the string into a list
-        cleanstring = mstring.replace("Null", "0")
-        matchlist = cleanstring.split()
+        matchstring = matchstring.replace("Null", "0")
+        matchlist = matchstring.split()
 
+        #append the outcome for the single match to the array out outcomes
         y.append(matchlist[1])
 
         # list of indexes to delete
@@ -35,30 +35,40 @@ def discretize():
         for str in matchlist:
             templist.append(int(str))
 
-        # make a numpy array of 0's with size 121
-        finallist = np.zeros((121))
+        #numpy array of 0's with size 123 (113 heroes + 10 player winrates)
+        finallist = np.zeros((123))
 
-        # go through the list on index numbers and set their value to 1
-        findex = [templist[1], templist[2], templist[3], templist[4], templist[5], templist[11], templist[12],
-                  templist[13], templist[14], templist[15]]
-        for index in findex:
+        # go through the list on index numbers and set their value to 1 for radiant team hero picks
+        # and -1 for dire team hero picks.
+        findex1 = [templist[1], templist[2], templist[3], templist[4], templist[5]]
+        findex2 = [templist[11], templist[12], templist[13], templist[14], templist[15]]
+        for index in findex1:
             finallist[index] = 1
+        for index in findex2:
+            finallist[index] = -1
 
-        # finallist[110] til finallist[120] skal sættes lig med  templist[6] til templist[10] og templist[16] til templist[20]
-        fuckdether = [templist[6], templist[7], templist[8], templist[9], templist[10], templist[16], templist[17],
+        # go through the list on index numbers and set their value to be equal the playerwinrate divided by 100.
+        # indexcounter set to 113 as we only wanna change index 113 to 123
+        tempindex = [templist[6], templist[7], templist[8], templist[9], templist[10], templist[16], templist[17],
                       templist[18], templist[19], templist[20]]
-        countminroev = 111
-        for sutden in fuckdether:
-            finallist[countminroev] = sutden
-            countminroev += 1
+        indexcounter = 113
+        for index in tempindex:
+            finallist[indexcounter] = (index/100)
+            indexcounter += 1
 
+        # append the cleaned up information for a match to list of matches
         x.append(finallist)
 
-    yy = indextoint(y)
-    print(x)
-    print(yy)
+    y = indextoint(y)
 
+    # trains the classifier on the data and places the trained classifier in mlpc
+    mlpc = MLP.classifier.Dotaclf.fit(x,y)
 
+    # Tries to predict the outcome of an input
+    #a = mlpc.predict_proba(x[255].reshape(1,-1))[0,1]
+    #print(a)
+ 
+# Går gennem listen og ændre alle "true" til 1 og "false" til 0
 def indextoint(list):
     newlist = []
     for n in list:
@@ -67,6 +77,13 @@ def indextoint(list):
         else:
             newlist.append(0)
     return newlist
+
+def removefromstring(match, characters):
+
+    # Go through the list and remove any occurencess of [] , '
+    trantab = match.maketrans("", "", characters)
+    cleanedstring = match.translate(trantab)
+    return cleanedstring
 
 if __name__ == '__main__':
     discretize()

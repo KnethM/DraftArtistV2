@@ -1,4 +1,7 @@
 import random
+import math
+
+from models.heroprofile import HeroProfile
 from node import Node
 import logging
 import numpy
@@ -16,16 +19,6 @@ class Player:
 
     def get_move(self, move_type):
         raise NotImplementedError
-
-class MinMaxPlayer(Player):
-
-    def __init__(self, draft):
-        self.draft = draft
-        self.name = 'minmax'
-    
-    def get_move(self, move_type):
-        if self.draft.if_first_move():
-            return self.get_first_move()
 
 class RandomPlayer(Player):
 
@@ -216,3 +209,144 @@ class AssocRulePlayer(Player):
         else:
             move = random.choice(R)
             return move
+
+
+
+class KNNPlayer(Player):
+    def __init__(self, draft, k):
+        self.draft = draft
+        self.name = 'knn'
+        self.heroprofiles = self.loadheroes()
+        self.allroles = ["Carry", "Escape", "nuker", "initiator", "durable", "disabler", "jungler", "support", "pusher"]
+        self.k = k
+
+    def loadheroes(self):
+        file = open("input/heros.txt", "r").readlines()
+        heroprofiles = []
+        for line in file:
+            line = line.split("]")
+
+            line[0] = line[0].split("{")
+            line[0][1] = line[0][1].split(",")
+            id = line[0][1][0].split(":")[1]
+            name = line[0][1][2].split(":")[1]
+
+            count = 2
+            for ability in line[0][2:]:
+                line[0][count] = ability.replace("}", "")
+                count += 1
+
+            line[1] = line[1].split("{")
+
+            count = 1
+            for role in line[1][1:]:
+                s = role.replace("}", "").split(",")
+                switcher ={
+                    0: "Carry",
+                    1: "Escape",
+                    2: "nuker",
+                    3: "initiator",
+                    4: "durable",
+                    5: "disabler",
+                    6: "jungler",
+                    7: "support",
+                    8: "pusher"
+                }
+                s = ",".join(s[0:3])
+                line[1][count] = s + ',"rolename":' + switcher.get(int(role[9]))
+                count += 1
+
+
+            line[2] = line[2].split("{")
+
+            count = 1
+            for talent in line[2][1:]:
+                line[2][count] = talent.replace("}", "")
+                count += 1
+
+            line[3] = line[3].split(',"language')[0].split("{")[1].split(",")
+
+            count = 0
+            for stat in line[3]:
+                line[3][count] = stat.replace("}", "")
+                count += 1
+
+            hero = HeroProfile(id=id, name=name, abilities=line[0][2:], roles=line[1][1:], talents=line[2][1:],
+                               stats=line[3])
+
+            heroprofiles.append(hero)
+        return heroprofiles
+
+    def get_move(self, move_type):
+        if self.draft.if_first_move():
+            return self.get_first_move()
+
+        player = self.draft.next_player
+        if move_type == 'ban':
+            player = player ^ 1
+        allies = self.draft.get_state(player)
+
+        moves = self.draft.get_moves()
+        perfekt = self.perfekt(allies)
+
+        rating = []
+        for hero in self.heroprofiles:
+            if int(hero.ID) in moves:
+                roles = []
+                for role in hero.Roles:
+                    roles.append(role.split(",")[-1].split(":")[-1])
+                rating.append((hero.ID, numpy.sqrt(abs(len(self.intersection(roles, perfekt.Roles))-len(perfekt.Roles)))))
+        rating = sorted(rating, key=lambda x: x[-1])[:5]
+
+        return self.findbest(rating, self.draft.getcontroller())
+
+
+    def findbest(self, rating, player):
+        newrating = []
+        for hero in player:
+            hero = hero.replace('"', '').split(',')
+            id = hero[0].split(':')
+            for rated in rating:
+                if rated[0] == id[1]:
+                    winrate = 0
+                    if int(hero[2].split(':')[1]) != 0:
+                        winrate = float(hero[3].split(':')[1])/float(hero[2].split(':')[1])
+                    if winrate == 0:
+                        winrate = 1
+                    newrating.append((id[1], rated[1]/winrate))
+        if len(newrating) == 0:
+            return int(random.sample(rating, 1)[0][0])
+        return int(self.minintuble(newrating)[0])
+
+    def intersection(self, lst1, lst2):
+        lst3 = [value for value in lst1 if value in lst2]
+        return lst3
+
+    def perfekt(self, allies):
+        allieprofiles=[]
+        if allies == []:
+            return HeroProfile(id=0, name="", abilities=[], roles=self.allroles, talents=[],
+                               stats=[])
+        for hero in self.heroprofiles:
+            if int(hero.ID) in allies:
+                allieprofiles.append(hero)
+        roles = self.extractroles(allieprofiles)
+
+        return HeroProfile(id=0, name="", abilities=[], roles=roles, talents=[],
+                               stats=[])
+
+    def extractroles(self,profiles):
+        all = self.allroles.copy()
+        for profile in profiles:
+            for role in profile.Roles:
+                role = role.split(",")[-1].split(":")[-1]
+                if role in all:
+                    all.remove(role)
+        return all
+
+    def minintuble(self, list):
+        best = list[0]
+        for tuble in list[1:]:
+            if best[1] > tuble[1]:
+                best = tuble
+        return best
