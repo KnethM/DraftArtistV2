@@ -101,11 +101,15 @@ class MF():
         return mf.b + mf.b_u[:, np.newaxis] + mf.b_i[np.newaxis:, ] + mf.P.dot(mf.Q.T)
 
 
-player1 = [1, 3, 5]
-player2 = [22, 7, 12]
-player3 = [73, 9, 10]
-player4 = [44, 2, 18]
-player5 = [55, 15, 20]
+def randomValue(x, y):
+    return randint(x, y)
+
+
+player1 = [1, randomValue(1, 100), 100]
+player2 = [22, randomValue(1, 100), 100]
+player3 = [73, randomValue(1, 100), 100]
+player4 = [44, randomValue(1, 100), 100]
+player5 = [55, randomValue(1, 100), 100]
 playerList = [player1, player2, player3, player4, player5]
 
 def winrateSort(objt):
@@ -138,9 +142,6 @@ values2 = [getPlayerID(playerList, 1), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 values3 = [getPlayerID(playerList, 2), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 val = 0
 
-
-def randomValue(x, y):
-    return randint(x, y)
 
 
 for x in range(1, 19):
