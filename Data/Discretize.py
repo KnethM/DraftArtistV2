@@ -64,7 +64,14 @@ def discretize():
 
     # trains the classifier on the data and places the trained classifier in mlpc
     mlpc = mlp.classifier.Dotaclf1layer.fit(x,y)
-    pp.dump(mlpc, open('mlp.pickle', "wb"))
+    mlpclist = []
+    mlpclist.append(mlpc)
+    mlpclist.append(113)
+
+    pp.dump(mlpclist, open('mlp.pickle', "wb"))
+
+    mlpload = pp.load(open('mlp.pickle', "rb"))
+    print(mlpload)
 
     # Tries to predict the outcome of an input
     #a = mlpc.predict_proba(x[255].reshape(1,-1))[0,1]
