@@ -78,6 +78,17 @@ class Draft:
         x = np.zeros((1, self.M))
         x[0, self.state[0]] = 1
         x[0, self.state[1]] = -1
+        winrates = [self.findwinrate(self.controllers[0][0],self.state[0][0]),
+                    self.findwinrate(self.controllers[0][1],self.state[0][1]),
+                    self.findwinrate(self.controllers[0][2],self.state[0][2]),
+                    self.findwinrate(self.controllers[0][3],self.state[0][3]),
+                    self.findwinrate(self.controllers[0][4],self.state[0][4]),
+                    self.findwinrate(self.controllers[1][0],self.state[1][0]),
+                    self.findwinrate(self.controllers[1][1],self.state[1][1]),
+                    self.findwinrate(self.controllers[1][2],self.state[1][2]),
+                    self.findwinrate(self.controllers[1][3],self.state[1][3]),
+                    self.findwinrate(self.controllers[1][4],self.state[1][4])]
+        x = np.reshape(np.append(x[0], winrates), (-1, 123))
         red_team_win_rate = self.outcome_model.predict_proba(x)[0, 1]
         return red_team_win_rate
 
@@ -94,6 +105,7 @@ class Draft:
         copy.player = self.player
         copy.next_player = self.next_player
         copy.player_models = self.player_models
+        copy.controllers = self.controllers
         return copy
 
     def move(self, move):
@@ -182,4 +194,15 @@ class Draft:
             if self.move_cnt[1] in pickrounds:
                 return self.controllers[1][pickrounds.index(self.move_cnt[1])]
         return []
+
+    def findwinrate(self, controller, heroid):
+        for hero in controller:
+            hero = hero.split(",")
+            id = int(hero[0].split(":")[1].replace('"',''))
+            if id == heroid:
+                gameplayed = int(hero[2].split(":")[1].replace('"',''))
+                if gameplayed == 0:
+                    return 0.0
+                return int(hero[3].split(":")[1].replace('"',''))/gameplayed
+        return 0.0
 
