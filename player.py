@@ -117,6 +117,67 @@ class MCTSPlayer(Player):
         return root.select_final()
 
 
+class MCTSPlayerSkill(Player):
+
+    def __init__(self, name, draft, maxiters, c):
+        self.draft = draft
+        self.name =name
+        self.maxiters = maxiters
+        self.c = c
+
+    def get_move(self, move_type):
+        """
+        decide the next move
+        """
+        if self.draft.if_first_move():
+            return self.get_first_move()
+
+        root = Node(player=self.draft.player, untried_actions=self.draft.get_moves(), c=self.c)
+
+        for i in range(self.maxiters):
+            node = root
+            tmp_draft = self.draft.copy()
+
+            # selection - select best child if parent fully expanded and not terminal
+            while len(node.untried_actions) == 0 and node.children != []:
+                # logger.info('selection')
+                node = node.select()
+                tmp_draft.move(node.action)
+            # logger.info('')
+
+            # expansion - expand parent to a random untried action
+            if len(node.untried_actions) != 0:
+                # logger.info('expansion')
+                a = random.sample(node.untried_actions, 1)[0]
+                tmp_draft.move(a)
+                p = tmp_draft.player
+                node = node.expand(a, p, tmp_draft.get_moves())
+            # logger.info('')
+
+            # simulation - rollout to terminal state from current
+            # state using random actions
+            while not tmp_draft.end():
+                # logger.info('simulation')
+                moves = tmp_draft.get_moves()
+                a = random.sample(moves, 1)[0]
+                tmp_draft.move(a)
+            # logger.info('')
+
+            # backpropagation - propagate result of rollout game up the tree
+            # reverse the result if player at the node lost the rollout game
+            while node != None:
+                # logger.info('backpropagation')
+                if node.player == 0:
+                    result = tmp_draft.eval(True)
+                else:
+                    result = 1 - tmp_draft.eval(True)
+                node.update(result)
+                node = node.parent
+            # logger.info('')
+
+        return root.select_final()
+
+
 class AssocRulePlayer(Player):
 
     def __init__(self, draft):
@@ -296,7 +357,7 @@ class KNNPlayer(Player):
                 for role in hero.Roles:
                     roles.append(role.split(",")[-1].split(":")[-1])
                 rating.append((hero.ID, numpy.sqrt(abs(len(self.intersection(roles, perfekt.Roles))-len(perfekt.Roles)))))
-        rating = sorted(rating, key=lambda x: x[-1])[:5]
+        rating = sorted(rating, key=lambda x: x[-1])[:self.k]
 
         return self.findbest(rating, self.draft.getcontroller())
 
