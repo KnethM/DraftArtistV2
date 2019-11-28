@@ -272,7 +272,7 @@ class AssocRulePlayer(Player):
             return move
 
 
-
+# K Nearest Neighbour Player
 class KNNPlayer(Player):
     def __init__(self, draft, k):
         self.draft = draft
@@ -281,8 +281,9 @@ class KNNPlayer(Player):
         self.allroles = ["Carry", "Escape", "nuker", "initiator", "durable", "disabler", "jungler", "support", "pusher"]
         self.k = k
 
+    # Loads in hero profiles from disk
     def loadheroes(self):
-        file = open("input/heros.txt", "r").readlines()
+        file = open("DraftArtistV2/input/heros.txt", "r").readlines()
         heroprofiles = []
         for line in file:
             line = line.split("]")
@@ -338,6 +339,9 @@ class KNNPlayer(Player):
             heroprofiles.append(hero)
         return heroprofiles
 
+    # Overrides Players get_move function, adding functionality to
+    # find a list of characters which fit the remaining roles
+    # then from that list, get the character with the highest winrate
     def get_move(self, move_type):
         if self.draft.if_first_move():
             return self.get_first_move()
@@ -361,18 +365,23 @@ class KNNPlayer(Player):
 
         return self.findbest(rating, self.draft.getcontroller())
 
-
+    # From the K Nearest Neighbours find the best
+    # hero in regards to the player in question
     def findbest(self, rating, player):
         newrating = []
+        dictionary = {}
+        if player == []:
+            return int(random.sample(rating, 1)[0][0])
         for hero in player:
             hero = hero.replace('"', '').split(',')
             id = hero[0].split(':')
-            for rated in rating:
-                if rated[0] == id[1]:
-                    winrate = 0
-                    if int(hero[2].split(':')[1]) != 0:
-                        winrate = float(hero[3].split(':')[1])/float(hero[2].split(':')[1])
-                    newrating.append((id[1], rated[1]*(1+winrate)))
+            dictionary[id[1]] = hero
+        for rated in rating:
+            hero = dictionary.get(rated[0])
+            winrate = 0
+            if int(hero[2].split(':')[1]) != 0:
+                winrate = float(hero[3].split(':')[1])/float(hero[2].split(':')[1])
+            newrating.append((rated[0], rated[1]*(1+winrate)))
         if len(newrating) == 0:
             return int(random.sample(rating, 1)[0][0])
         return int(self.minintuble(newrating)[0])
@@ -381,6 +390,8 @@ class KNNPlayer(Player):
         lst3 = [value for value in lst1 if value in lst2]
         return lst3
 
+    # From the list of allies creates the perfect ally
+    # so we can find the hero with most similarity to it
     def perfekt(self, allies):
         allieprofiles=[]
         if allies == []:
@@ -394,6 +405,8 @@ class KNNPlayer(Player):
         return HeroProfile(id=0, name="", abilities=[], roles=roles, talents=[],
                                stats=[])
 
+    # Given a list of profiles returns the list of roles
+    # of every hero
     def extractroles(self,profiles):
         all = self.allroles.copy()
         for profile in profiles:
@@ -403,6 +416,7 @@ class KNNPlayer(Player):
                     all.remove(role)
         return all
 
+    #TODO This needs rework - GreatestChange
     def minintuble(self, list):
         best = list[0]
         for tuble in list[1:]:
