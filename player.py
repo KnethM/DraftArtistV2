@@ -9,6 +9,13 @@ import concurrent.futures as cf
 import threading as thread
 logger = logging.getLogger('mcts')
 
+class MinMaxHelperClass:
+    def __init__(self, Player=None, untried_actions=None, depth=None, maxP=None, move_type=None, action=None):
+        if Player != None:
+            if depth == 0:
+                Player.eval(move_type, action)
+            else:
+                Player.minmax_tree(untried_actions, depth, maxP, move_type, action)
 
 class Player:
 
@@ -56,7 +63,6 @@ class HighestWinRatePlayer(Player):
         return best_move
 
 class MinMaxPlayerV2(Player):
-
     def __init__(self, actions, depth, maxPlayer, draft):
         self.depth = depth
         self.maxPlayer = maxPlayer
@@ -64,14 +70,14 @@ class MinMaxPlayerV2(Player):
         self.name = 'minmaxV2'
         self.winrates = self.getwinrate()
         self.executor = cf.ThreadPoolExecutor(max_workers=20)
-        self.curdepth = 2
-        self.reverseprocesses = []
+        self.curdepth = 3
+        self.Helper = MinMaxHelperClass
 
     def get_move(self, move_type):
         if self.draft.if_first_move():
             return self.get_first_move()
         root = Node(player=self.draft.player, untried_actions=self.draft.get_moves())
-        _, pick = self.minmax_tree(deepcopy(root.untried_actions), 2, True, move_type, 0)
+        _, pick = self.minmax_tree(deepcopy(root.untried_actions), self.curdepth, True, move_type, 0)
         return pick
 
     def minmax_tree(self, untried_actions, depth, maxP, move_type, action):
@@ -82,39 +88,39 @@ class MinMaxPlayerV2(Player):
         processes = []
         choice = 0
         if depth != 0:
-            with cf.ThreadPoolExecutor(max_workers=6) as executor:
-                for i in range(0, len(untried_actions)):
+            with cf.ProcessPoolExecutor(max_workers=6) as executor:
+                for i in range(0, 113):
                     if i in untried_actions:
                         temp = deepcopy(untried_actions)
                         temp.discard(i)
                         if maxP:
-                            #if depth == self.curdepth:
-                           processes.append(executor.submit(self.minmax_tree, temp, depth-1, False, move_type, i))
-                            #else:
-                            #    newval, choice = self.minmax_tree(temp, depth-1, False, move_type, i)
-                            #    if value < newval:
-                            #        choice = i
-                            #        value = newval
+                            if depth == 1:
+                                processes.append(executor.submit(self.Helper, self, temp, depth-1, False, move_type, i))
+                            else:
+                                newval, choice = self.minmax_tree(temp, depth-1, False, move_type, i)
+                                if value < newval:
+                                    choice = i
+                                    value = newval
                         else:
-                            #if depth == self.curdepth:
-                            processes.append(executor.submit(self.minmax_tree, temp, depth-1, True, move_type, i))
-                            #else:
-                            #    newval, newchoice = self.minmax_tree(temp, depth-1, True, move_type, i)
-                            #    if value > newval:
-                            #        choice = i
-                            #        value = newval
-                #if depth == self.curdepth:
-                for proc in cf.as_completed(processes):
-                    processes.remove(proc)
-                    val, newchoice = proc.result()
-                    if maxP:
-                        if value < val:
-                            value = val
-                            choice = newchoice
-                    else:
-                        if value > val:
-                            value = val
-                            choice = newchoice
+                            if depth == 1:
+                                processes.append(executor.submit(self.Helper, self, temp, depth-1, True, move_type, i))
+                            else:
+                                newval, newchoice = self.minmax_tree(temp, depth-1, True, move_type, i)
+                                if value > newval:
+                                    choice = i
+                                    value = newval
+                if depth == 1:
+                    for proc in cf.as_completed(processes):
+                        processes.remove(proc)
+                        val, newchoice = proc.result()
+                        if maxP:
+                            if value < val:
+                                value = val
+                                choice = newchoice
+                        else:
+                            if value > val:
+                                value = val
+                                choice = newchoice
                 return value, choice
         else:
             return self.eval(move_type, action), action
