@@ -283,7 +283,7 @@ class KNNPlayer(Player):
 
     # Loads in hero profiles from disk
     def loadheroes(self):
-        file = open("DraftArtistV2/input/heros.txt", "r").readlines()
+        file = open("input/heros.txt", "r").readlines()
         heroprofiles = []
         for line in file:
             line = line.split("]")
@@ -381,10 +381,16 @@ class KNNPlayer(Player):
             winrate = 0
             if int(hero[2].split(':')[1]) != 0:
                 winrate = float(hero[3].split(':')[1])/float(hero[2].split(':')[1])
-            newrating.append((rated[0], rated[1]*(1+winrate)))
+            newrating.append((rated[0], winrate))
         if len(newrating) == 0:
             return int(random.sample(rating, 1)[0][0])
-        return int(self.minintuble(newrating)[0])
+        val = newrating[0][1]
+        id = newrating[0][0]
+        for rated in newrating[1:]:
+            if val < rated[1]:
+                id = rated[0]
+                val = rated[1]
+        return int(id)
 
     def intersection(self, lst1, lst2):
         lst3 = [value for value in lst1 if value in lst2]
@@ -415,11 +421,3 @@ class KNNPlayer(Player):
                 if role in all:
                     all.remove(role)
         return all
-
-    #TODO This needs rework - GreatestChange
-    def minintuble(self, list):
-        best = list[0]
-        for tuble in list[1:]:
-            if best[1] > tuble[1]:
-                best = tuble
-        return best
