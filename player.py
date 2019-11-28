@@ -372,9 +372,7 @@ class KNNPlayer(Player):
                     winrate = 0
                     if int(hero[2].split(':')[1]) != 0:
                         winrate = float(hero[3].split(':')[1])/float(hero[2].split(':')[1])
-                    if winrate == 0:
-                        winrate = 1
-                    newrating.append((id[1], rated[1]/winrate))
+                    newrating.append((id[1], rated[1]*(1+winrate)))
         if len(newrating) == 0:
             return int(random.sample(rating, 1)[0][0])
         return int(self.minintuble(newrating)[0])
