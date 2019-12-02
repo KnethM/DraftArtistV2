@@ -360,10 +360,31 @@ class KNNPlayer(Player):
                 roles = []
                 for role in hero.Roles:
                     roles.append(role.split(",")[-1].split(":")[-1])
-                rating.append((hero.ID, numpy.sqrt(abs(len(self.intersection(roles, perfekt.Roles))-len(perfekt.Roles)))))
+                rating.append((hero.ID, self.euclidiandis(roles, perfekt.Roles)))
         rating = sorted(rating, key=lambda x: x[-1])[:self.k]
 
         return self.findbest(rating, self.draft.getcontroller())
+
+    def euclidiandis(self,roles, missingroles):
+        return numpy.sqrt(abs(len(self.intersection(roles, missingroles)) - len(missingroles)))
+
+    def manhattendis(self, roles, missingroles):
+        return abs(len(self.intersection(roles, missingroles)) - len(missingroles))
+
+    def CosD(self, roles, missingroles):
+        return (len(self.intersection(roles, missingroles)) * len(missingroles))/((len(self.intersection(roles, missingroles))^2)*(len(missingroles)^2))
+
+    def SCD(self, roles, missingroles):
+        return (numpy.sqrt(len(self.intersection(roles, missingroles))) - numpy.sqrt(len(missingroles)))^2
+
+    def SED(self, roles, missingroles):
+        return (abs(len(self.intersection(roles, missingroles)) - len(missingroles)))^2
+
+    def KDD(self, roles, missingroles):
+        return len(self.intersection(roles, missingroles)) * numpy.log((2*len(self.intersection(roles, missingroles)))/(len(self.intersection(roles, missingroles) + len(missingroles))))
+
+    def VWHD(self, roles, missingroles):
+        return (abs(len(self.intersection(roles, missingroles)) - len(missingroles)))/min(len(self.intersection(roles, missingroles)), len(missingroles))
 
     # From the K Nearest Neighbours find the best
     # hero in regards to the player in question
