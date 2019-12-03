@@ -274,12 +274,13 @@ class AssocRulePlayer(Player):
 
 # K Nearest Neighbour Player
 class KNNPlayer(Player):
-    def __init__(self, draft, k):
+    def __init__(self, draft, k, distance):
         self.draft = draft
-        self.name = 'knn'
+        self.name = 'knn_' + distance
         self.heroprofiles = self.loadheroes()
         self.allroles = ["Carry", "Escape", "nuker", "initiator", "durable", "disabler", "jungler", "support", "pusher"]
         self.k = k
+        self.distance = distance
 
     # Loads in hero profiles from disk
     def loadheroes(self):
@@ -360,10 +361,29 @@ class KNNPlayer(Player):
                 roles = []
                 for role in hero.Roles:
                     roles.append(role.split(",")[-1].split(":")[-1])
-                rating.append((hero.ID, self.euclidiandis(roles, perfekt.Roles)))
+                dis = self.d(roles, perfekt.Roles)
+                rating.append((hero.ID, dis))
         rating = sorted(rating, key=lambda x: x[-1])[:self.k]
 
         return self.findbest(rating, self.draft.getcontroller())
+
+    def d(self, roles, missing):
+        if self.distance == "euclid":
+            return self.euclidiandis(roles, missing)
+        elif self.distance == "manhatten":
+            return self.manhattendis(roles, missing)
+        elif self.distance == "cosd":
+            return self.CosD(roles, missing)
+        elif self.distance == "scd":
+            return self.SCD(roles, missing)
+        elif self.distance == "sed":
+            return self.SED(roles, missing)
+        elif self.distance == "kdd":
+            return self.KDD(roles, missing)
+        elif self.distance == "vwhd":
+            return self.VWHD(roles, missing)
+        else:
+            raise NotImplementedError
 
     def euclidiandis(self,roles, missingroles):
         return numpy.sqrt(abs(len(self.intersection(roles, missingroles)) - len(missingroles)))

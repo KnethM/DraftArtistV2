@@ -23,6 +23,7 @@ class Draft:
             self.player_models = [self.construct_player_model(p0_model_str),
                                   self.construct_player_model(p1_model_str)]
             self.controllers = [self.load_red_controllers(), self.load_blue_controllers()]
+            self.sumdur = 0
 
     def get_state(self, player):
         return self.state[player]
@@ -44,7 +45,7 @@ class Draft:
         elif player_model_str == 'hwr':
             return HighestWinRatePlayer(draft=self)
         elif player_model_str.split("_")[0] == 'knn':
-            return KNNPlayer(draft=self, k=int(player_model_str.split("_")[1]))
+            return KNNPlayer(draft=self, k=int(player_model_str.split("_")[1]), distance=player_model_str.split("_")[2])
         else:
             raise NotImplementedError
 
