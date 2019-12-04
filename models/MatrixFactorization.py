@@ -393,7 +393,7 @@ class startNormalWinrateMatrixFac():
     nmf = normalMatrixFac()
 
     def start(self):
-        mf = MF(self.nmf.getListOfCharacters(), K=10, alpha=0.01, beta=0.01, iterations=10)
+        mf = MF(self.nmf.getListOfCharacters(), K=10, alpha=0.01, beta=0.01, iterations=1000)
         training_process = mf.train()
         print()
         print("training process")
@@ -413,7 +413,7 @@ class startTresholdMatrixFac():
     def start(self):
         thmf = thresholdMatrixFac()
         thmf.setThreshold(0.60)
-        mfth = MF(thmf.getListOfCharacters(), K=10, alpha=0.01, beta=0.01, iterations=10)
+        mfth = MF(thmf.getListOfCharacters(), K=10, alpha=0.01, beta=0.01, iterations=1000)
         training_process_th = mfth.train()
         print()
         print("training process")
