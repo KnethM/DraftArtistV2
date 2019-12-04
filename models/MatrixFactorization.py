@@ -206,17 +206,19 @@ class importPlayers():
         player2 = [player2[i * n:(i + 1) * n] for i in range((len(player2) + n - 1) // n)]
         return player2
 
+    def getPlayerlistSorted(self):
+        return self.calWinRate(self.playerlistComplete())
 
-"Import Players"
-ip = importPlayers()
-playerListComplete = ip.playerlistComplete()
-playerListSorted = ip.calWinRate(playerListComplete)
+
+
 
 "List of characters that is not suitable for picks"
 charNotAbleToPick = [0, 24, 114, 119, 120, 121, 129]
 
 
 class normalMatrixFac():
+    ip = importPlayers()
+    playerListSorted = ip.getPlayerlistSorted()
     "Blue Team - Normal Winrate"
     values1 = []
     for v1 in range(0, 113):
@@ -280,11 +282,27 @@ class normalMatrixFac():
             return self.values1
         elif value == 2:
             return self.values2
+        elif value == 3:
+            return self.values3
+        elif value == 4:
+            return self.values4
+        elif value == 5:
+            return self.values5
+        elif value == 6:
+            return self.values6
+        elif value == 7:
+            return self.values7
+        elif value == 8:
+            return self.values8
+        elif value == 9:
+            return self.values9
         elif value == 10:
             return self.values10
 
 
 class thresholdMatrixFac():
+    ip = importPlayers()
+    playerListSorted = ip.getPlayerlistSorted()
     """Blue Team - Winrate with threshold"""
     threshold = 0.5
 
@@ -396,8 +414,6 @@ class startNormalWinrateMatrixFac():
         mf = MF(self.nmf.getListOfCharacters(), K=10, alpha=0.01, beta=0.01, iterations=1000)
         training_process = mf.train()
         print()
-        print("training process")
-        print(training_process)
         print("Full Matrix")
         print(mf.full_matrix())
         return mf.full_matrix()
@@ -416,14 +432,14 @@ class startTresholdMatrixFac():
         mfth = MF(thmf.getListOfCharacters(), K=10, alpha=0.01, beta=0.01, iterations=1000)
         training_process_th = mfth.train()
         print()
-        print("training process")
-        print(training_process_th)
         print("Full Matrix")
         print(mfth.full_matrix())
         return mfth.full_matrix()
 
 
 def printTestResultnormal(test, val1, val2):
+    ip = importPlayers()
+    playerListSorted = ip.getPlayerlistSorted()
     test1 = test[0]
     test2 = test[9]
 
@@ -467,6 +483,8 @@ def printTestResultnormal(test, val1, val2):
 
 
 def printTestResult(test):
+    ip = importPlayers()
+    playerListSorted = ip.getPlayerlistSorted()
     thmf = thresholdMatrixFac()
     test1 = test[0]
     test2 = test[9]

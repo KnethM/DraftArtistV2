@@ -2,6 +2,8 @@ import random
 import math
 
 from models.heroprofile import HeroProfile
+from models.MatrixFactorization import startNormalWinrateMatrixFac
+from models.MatrixFactorization import startTresholdMatrixFac
 from node import Node
 import logging
 import numpy
@@ -350,3 +352,21 @@ class KNNPlayer(Player):
             if best[1] > tuble[1]:
                 best = tuble
         return best
+
+
+class MatrixFactorizationWinrate(Player):
+    def __init__(self, draft):
+        self.draft = draft
+        self.name = 'mfw'
+
+    def get_move(self, move_type):
+        startNormalWinrateMatrixFac()
+
+
+class MatrixFactorizationThreshold(Player):
+    def __init__(self, draft):
+        self.draft = draft
+        self.name = 'mft'
+
+    def get_move(self, move_type):
+        startTresholdMatrixFac()
