@@ -1,4 +1,4 @@
-from player import RandomPlayer, MCTSPlayer, AssocRulePlayer, HighestWinRatePlayer, KNNPlayer, MCTSPlayerSkill, KNNPlayer2
+from player import RandomPlayer, MCTSPlayer, AssocRulePlayer, HighestWinRatePlayer, KNNPlayer
 from utils.parser import parse_mcts_maxiter_c, parse_rave_maxiter_c_k
 import pickle
 import logging
@@ -38,17 +38,12 @@ class Draft:
         elif player_model_str.startswith('mcts'):
             max_iters, c = parse_mcts_maxiter_c(player_model_str)
             return MCTSPlayer(name=player_model_str, draft=self, maxiters=max_iters, c=c)
-        elif player_model_str.startswith('skillmcts'):
-            max_iters, c = parse_mcts_maxiter_c(player_model_str)
-            return MCTSPlayerSkill(name=player_model_str, draft=self, maxiters=max_iters, c=c)
         elif player_model_str == 'assocrule':
             return AssocRulePlayer(draft=self)
         elif player_model_str == 'hwr':
             return HighestWinRatePlayer(draft=self)
         elif player_model_str.split("_")[0] == 'knn':
             return KNNPlayer(draft=self, k=int(player_model_str.split("_")[1]), distance=player_model_str.split("_")[2])
-        elif player_model_str.split("_")[0] == 'knn2':
-            return KNNPlayer2(draft=self, k=int(player_model_str.split("_")[1]), distance=player_model_str.split("_")[2])
         else:
             raise NotImplementedError
 
