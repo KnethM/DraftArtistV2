@@ -1,4 +1,4 @@
-from player import RandomPlayer, MCTSPlayer, AssocRulePlayer, HighestWinRatePlayer, KNNPlayer
+from player import RandomPlayer, MCTSPlayer, AssocRulePlayer, HighestWinRatePlayer, KNNPlayer, MCTSPlayerSkill
 from utils.parser import parse_mcts_maxiter_c, parse_rave_maxiter_c_k
 import pickle
 import logging
@@ -38,6 +38,9 @@ class Draft:
         elif player_model_str.startswith('mcts'):
             max_iters, c = parse_mcts_maxiter_c(player_model_str)
             return MCTSPlayer(name=player_model_str, draft=self, maxiters=max_iters, c=c)
+        elif player_model_str.startswith('skillmcts'):
+            max_iters, c = parse_mcts_maxiter_c(player_model_str)
+            return MCTSPlayerSkill(name=player_model_str, draft=self, maxiters=max_iters, c=c)
         elif player_model_str == 'assocrule':
             return AssocRulePlayer(draft=self)
         elif player_model_str == 'hwr':
@@ -82,16 +85,16 @@ class Draft:
             x = np.zeros((1, self.M_with_skill))
             x[0, self.state[0]] = 1
             x[0, self.state[1]] = -1
-            winrates = [self.findwinrate(self.controllers[0][0], self.state[0][0]),
-                        self.findwinrate(self.controllers[0][1], self.state[0][1]),
-                        self.findwinrate(self.controllers[0][2], self.state[0][2]),
-                        self.findwinrate(self.controllers[0][3], self.state[0][3]),
-                        self.findwinrate(self.controllers[0][4], self.state[0][4]),
-                        self.findwinrate(self.controllers[1][0], self.state[1][0]),
-                        self.findwinrate(self.controllers[1][1], self.state[1][1]),
-                        self.findwinrate(self.controllers[1][2], self.state[1][2]),
-                        self.findwinrate(self.controllers[1][3], self.state[1][3]),
-                        self.findwinrate(self.controllers[1][4], self.state[1][4])]
+            winrates = [self.findwinrate(self.controllers[0][0],self.state[0][0]),
+                        self.findwinrate(self.controllers[0][1],self.state[0][1]),
+                        self.findwinrate(self.controllers[0][2],self.state[0][2]),
+                        self.findwinrate(self.controllers[0][3],self.state[0][3]),
+                        self.findwinrate(self.controllers[0][4],self.state[0][4]),
+                        self.findwinrate(self.controllers[1][0],self.state[1][0]),
+                        self.findwinrate(self.controllers[1][1],self.state[1][1]),
+                        self.findwinrate(self.controllers[1][2],self.state[1][2]),
+                        self.findwinrate(self.controllers[1][3],self.state[1][3]),
+                        self.findwinrate(self.controllers[1][4],self.state[1][4])]
             x = np.reshape(np.append(x[0], winrates), (-1, 123))
             red_team_win_rate = self.outcome_model_with_skill.predict_proba(x)[0, 1]
             return red_team_win_rate
@@ -206,7 +209,7 @@ class Draft:
         else:
             if self.move_cnt[1] in pickrounds:
                 return self.controllers[1][pickrounds.index(self.move_cnt[1])]
-            return random.sample(self.controllers[1], 1)[0]
+        return []
 
     def findwinrate(self, controller, heroid):
         for hero in controller:
@@ -218,14 +221,3 @@ class Draft:
                     return 0.0
                 return int(hero[3].split(":")[1].replace('"',''))/gameplayed
         return 0.0
-
-    def calculatewinrates(self, controller):
-        ratings = [0]*(self.M_with_skill+1)
-        for hero in controller:
-            hero = hero.replace('"', '').split(',')
-            id = int(hero[0].split(':')[1])
-            games = int(hero[2].split(':')[1])
-            if games != 0 and id < 114:
-                wins = int(hero[3].split(':')[1])
-                ratings[id] = wins/games
-        return ratings

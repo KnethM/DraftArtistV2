@@ -9,9 +9,9 @@ from utils.parser import parse_mcts_exp_parameters
 from captain_mode_draft import Draft
 
 
-def experiment(match_id, p0_model_str, p1_model_str, env_path):
+def experiment(match_id, p0_model_str, p1_model_str, env_path, env_path2):
     t1 = time.time()
-    d = Draft(env_path, p0_model_str, p1_model_str)  # instantiate board
+    d = Draft(env_path, env_path2, p0_model_str, p1_model_str)  # instantiate board
 
     while not d.end():
         p = d.get_player()
@@ -35,22 +35,23 @@ if __name__ == '__main__':
     np.random.seed(123)
     # win rate predictor path
     env_path = 'NN_hiddenunit120_dota.pickle'
+    env_path_with_skill = 'mlp.pickle'
 
     logger = logging.getLogger('mcts')
     logger.addHandler(logging.StreamHandler())
     logger.setLevel(logging.WARNING)
 
     kwargs = parse_mcts_exp_parameters()
-    # possible player string: random, hwr, mcts_maxiter_c, assocrule ,knn_k
+    # possible player string: random, hwr, mcts_maxiter_c, skillmcts_maxiter_c, assocrule ,knn_k
     # red team
-    p0_model_str = 'knn_5' if not kwargs else kwargs.p0
+    p0_model_str = 'knn_3' if not kwargs else kwargs.p0
     # blue team
-    p1_model_str = 'assocrule' if not kwargs else kwargs.p1
-    num_matches = 1 if not kwargs else kwargs.num_matches
+    p1_model_str = 'mcts_300_2' if not kwargs else kwargs.p1
+    num_matches = 30 if not kwargs else kwargs.num_matches
 
     red_team_win_rates, times = [], []
     for i in range(num_matches):
-        wr, t, s = experiment(i, p0_model_str, p1_model_str, env_path)
+        wr, t, s = experiment(i, p0_model_str, p1_model_str, env_path, env_path_with_skill)
         red_team_win_rates.append(wr)
         times.append(t)
         s += ', mean predicted win rate: {:.5f}\n'.format(np.average(red_team_win_rates))

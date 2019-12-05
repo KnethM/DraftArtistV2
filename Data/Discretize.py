@@ -1,5 +1,6 @@
 import numpy as np
-from models import MLPclass as MLP
+import pickle as pp
+from models import MLPclass as mlp
 
 # Method for discretizing the data even further by cleaning it up and abstracting the numbers.
 def discretize():
@@ -62,7 +63,15 @@ def discretize():
     y = indextoint(y)
 
     # trains the classifier on the data and places the trained classifier in mlpc
-    mlpc = MLP.classifier.Dotaclf.fit(x,y)
+    mlpc = mlp.classifier.Dotaclf1layer.fit(x,y)
+    mlpclist = []
+    mlpclist.append(mlpc)
+    mlpclist.append(113)
+
+    pp.dump(mlpclist, open('mlp.pickle', "wb"))
+
+    mlpload = pp.load(open('mlp.pickle', "rb"))
+    print(mlpload)
 
     # Tries to predict the outcome of an input
     #a = mlpc.predict_proba(x[255].reshape(1,-1))[0,1]
