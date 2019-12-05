@@ -541,8 +541,8 @@ class MatrixFactorizationWinrate():
         return file
 
     def addCharactersToList(self, fileinput):
-        file = open("../input/characters.txt", "r")
-        file.write(fileinput)
+        file = open("../input/characters.txt", "w")
+        file.writelines(fileinput)
         return file
 
     def get_move(self, move_type):
@@ -564,7 +564,7 @@ class MatrixFactorizationWinrate():
                     bestID = nmfp[0][u][0][1]
                     if bestID not in charNotAbleToPick:
                         if bestID not in self.getListOfChosenCharacters():
-                            self.addCharactersToList(bestID)
+                            self.addCharactersToList(str(bestID))
                             return bestID
         return []
 
