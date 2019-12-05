@@ -1,11 +1,13 @@
 import random
 import math
-
+import os
 from models.heroprofile import HeroProfile
 from node import Node
 import logging
 import numpy
 import pickle
+import math
+import copy
 
 logger = logging.getLogger('mcts')
 
@@ -392,19 +394,28 @@ class KNNPlayer(Player):
         return abs(len(self.intersection(roles, missingroles)) - len(missingroles))
 
     def CosD(self, roles, missingroles):
-        return (len(self.intersection(roles, missingroles)) * len(missingroles))/((len(self.intersection(roles, missingroles))^2)*(len(missingroles)^2))
+        i = (numpy.sqrt(len(self.intersection(roles, missingroles))**2) * numpy.sqrt(len(missingroles)**2))
+        if i == 0:
+            return numpy.inf
+        return (len(self.intersection(roles, missingroles)) * len(missingroles)) / i
 
     def SCD(self, roles, missingroles):
-        return (numpy.sqrt(len(self.intersection(roles, missingroles))) - numpy.sqrt(len(missingroles)))^2
+        return (numpy.sqrt(len(self.intersection(roles, missingroles))) - numpy.sqrt(len(missingroles)))**2
 
     def SED(self, roles, missingroles):
-        return (abs(len(self.intersection(roles, missingroles)) - len(missingroles)))^2
+        return (abs(len(self.intersection(roles, missingroles)) - len(missingroles)))**2
 
     def KDD(self, roles, missingroles):
-        return len(self.intersection(roles, missingroles)) * numpy.log((2*len(self.intersection(roles, missingroles)))/(len(self.intersection(roles, missingroles) + len(missingroles))))
+        i = len(self.intersection(roles, missingroles)) + len(missingroles)
+        if i == 0:
+            return numpy.inf
+        return len(self.intersection(roles, missingroles)) * numpy.log2((2*len(self.intersection(roles, missingroles)))/i)
 
     def VWHD(self, roles, missingroles):
-        return (abs(len(self.intersection(roles, missingroles)) - len(missingroles)))/min(len(self.intersection(roles, missingroles)), len(missingroles))
+        i = min(len(self.intersection(roles, missingroles)), len(missingroles))
+        if i==0 :
+            return numpy.inf
+        return (abs(len(self.intersection(roles, missingroles)) - len(missingroles)))/i
 
     # From the K Nearest Neighbours find the best
     # hero in regards to the player in question
@@ -462,3 +473,158 @@ class KNNPlayer(Player):
                 if role in all:
                     all.remove(role)
         return all
+
+class KNNPlayer2(Player):
+
+    def __init__(self, draft, k, distance):
+        self.draft = draft
+        self.name = 'knn2_' + distance
+        with open('models/hero_win_rates.pickle', 'rb') as f:
+            self.win_rate_dist = pickle.load(f)
+        self.k = k
+        self.distance = distance
+        self.controllergrid = self.makegrid()
+
+    def makegrid(self):
+        directory = os.fsencode("input/Players")
+        grid = []
+        for file in os.listdir(directory):
+            controller = open("input/Players/" + str(os.fsdecode(file)), "r").readlines()
+            ratings = [0] * 114
+            for hero in controller:
+                hero = hero.replace('"', '').replace('\'', "").split(',')
+                id = int(hero[0].split(':')[1])
+                games = int(hero[2].split(':')[1])
+                if games != 0 and id < 114:
+                    wins = int(hero[3].split(':')[1])
+                    ratings[id] = wins / games
+            grid.append(ratings)
+        return numpy.array(grid)
+
+    def get_move(self, move_type):
+        controller = self.draft.getcontroller()
+        potential_controller = copy.deepcopy(controller)
+        for i, rate in enumerate(controller):
+            if rate == 0 and i not in [0, 24]:
+                prediction = self.predict_classification(self.controllergrid, numpy.array(controller), self.k, i)
+                potential_controller[i] = prediction
+        moves = self.draft.get_moves()
+        move_win_rates = [(m, potential_controller[m]) for m in moves]
+        best_move, best_win_rate = sorted(move_win_rates, key=lambda x: x[1])[-1]
+        return best_move
+
+    # calculate the Euclidean distance between two vectors
+    def euclidean_distance(self, row1, row2, predcol):
+        distance = 0.0
+        for i in range(len(row1)):
+            if i != predcol:
+                distance += (row1[i] - row2[i]) ** 2
+        return math.sqrt(distance)
+
+    # Locate the most similar neighbors
+    def get_neighbors(self, train, test_row, num_neighbors, predcol):
+        distances = list()
+        for train_row in train:
+            dist = self.d(test_row, train_row, predcol)
+            distances.append((train_row, dist))
+        distances.sort(key=lambda tup: tup[1])
+        neighbors = list()
+        for i in range(num_neighbors):
+            neighbors.append(distances[i])
+        return neighbors
+
+    # Make a classification prediction with neighbors
+    def predict_classification(self, train, test_row, num_neighbors, predcol):
+        neighbors = self.get_neighbors(train, test_row, num_neighbors, predcol)
+        prediction = self.pred(test_row, neighbors, predcol)
+        return prediction
+
+    def pred(self, a, n, p):
+        suma=0
+        for i in range(len(a)):
+            if i != p:
+                suma += a[i]
+        suma = suma/(len(a)-1)
+        addsim = 0
+        for naighbor in n:
+            addsim += naighbor[1]
+        for naighbor in n:
+            sumnab = 0
+            for i in range(len(naighbor[0])):
+                if i != p:
+                    sumnab += naighbor[0][i]
+            sumnab = sumnab/(len(naighbor[0]) - 1)
+            suma += (naighbor[1]/addsim)*(naighbor[0][p]-sumnab)
+
+        return suma
+
+    def d(self, test_row, train_row, predcol):
+        if self.distance == "euclid":
+            return self.euclidean_distance(test_row, train_row, predcol)
+        elif self.distance == "manhatten":
+            return self.manhatten_distance(test_row, train_row, predcol)
+        elif self.distance == "cosd":
+            return self.CosD(test_row, train_row, predcol)
+        elif self.distance == "scd":
+            return self.SCD(test_row, train_row, predcol)
+        elif self.distance == "sed":
+            return self.SED(test_row, train_row, predcol)
+        elif self.distance == "kdd":
+            return self.KDD(test_row, train_row, predcol)
+        elif self.distance == "vwhd":
+            return self.VWHD(test_row, train_row, predcol)
+        else:
+            raise NotImplementedError
+
+    def manhatten_distance(self, row1, row2, predcol):
+        distance = 0.0
+        for i in range(len(row1)):
+            if i != predcol:
+                distance += abs(row1[i] - row2[i])
+        return distance
+
+    def CosD(self, row1, row2, predcol):
+        top = 0
+        row1_squrd = 0
+        row2_squrd = 0
+        for i in range(len(row1)):
+            if i != predcol:
+                top += row1[i]*row2[i]
+                row1_squrd += row1[i]**2
+                row2_squrd += row2[i]**2
+        return top/(math.sqrt(row1_squrd)*math.sqrt(row2_squrd))
+
+    def SCD(self, row1, row2, predcol):
+        distance = 0.0
+        for i in range(len(row1)):
+            if i != predcol:
+                distance += (math.sqrt(row1[i])-math.sqrt(row2[i]))**2
+        return distance
+
+    def SED(self, row1, row2, predcol):
+        distance = 0.0
+        for i in range(len(row1)):
+            if i != predcol:
+                distance += (row1[i] - row2[i])**2
+        return distance
+
+    def KDD(self, row1, row2, predcol):
+        distance = 0.0
+        for i in range(len(row1)):
+            divider = row1[i] + row2[i]
+            top = 2*row1[i]
+            if i != predcol and divider !=0 and top != 0:
+                distance += abs(row1[i] * math.log2(top / divider))
+        return distance
+
+    def VWHD(self, row1, row2, predcol):
+        distance = 0.0
+        for i in range(len(row1)):
+            divider = min(row1[i], row2[i])
+            if i != predcol and divider != 0:
+                distance += abs(row1[i]-row2[i]/divider)
+        return distance
+
+
+
+
