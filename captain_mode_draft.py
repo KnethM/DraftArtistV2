@@ -1,8 +1,9 @@
-from player import RandomPlayer, MCTSPlayer, AssocRulePlayer, HighestWinRatePlayer, KNNPlayer
+from player import RandomPlayer, MCTSPlayer, AssocRulePlayer, HighestWinRatePlayer, KNNPlayer, MCTSPlayerSkill, KNNPlayer2
 from utils.parser import parse_mcts_maxiter_c, parse_rave_maxiter_c_k
 import pickle
 import logging
 import numpy as np
+import random
 
 
 class Draft:
@@ -10,18 +11,20 @@ class Draft:
     class handling state of the draft
     """
 
-    def __init__(self, env_path=None, p0_model_str=None, p1_model_str=None):
+    def __init__(self, env_path=None, env_path2=None, p0_model_str=None, p1_model_str=None):
         if env_path and p0_model_str and p1_model_str:
             self.outcome_model, self.M = self.load(env_path)
+            self.outcome_model_with_skill, self.M_with_skill = self.load(env_path2)
             self.state = [[], []]
-            self.avail_moves = set(range(self.M))
+            self.avail_moves = set(range(self.M_with_skill))
             self.move_cnt = [0, 0]
             self.player = None  # current player's turn
             self.next_player = 0  # next player turn
+            self.controllers = [self.load_red_controllers(), self.load_blue_controllers()]
+            self.sumdur = 0
             # player 0 will pick first and be red team; player 1 will pick next and be blue team
             self.player_models = [self.construct_player_model(p0_model_str),
                                   self.construct_player_model(p1_model_str)]
-            self.controllers = [self.load_red_controllers(), self.load_blue_controllers()]
 
     def get_state(self, player):
         return self.state[player]
@@ -35,12 +38,17 @@ class Draft:
         elif player_model_str.startswith('mcts'):
             max_iters, c = parse_mcts_maxiter_c(player_model_str)
             return MCTSPlayer(name=player_model_str, draft=self, maxiters=max_iters, c=c)
+        elif player_model_str.startswith('skillmcts'):
+            max_iters, c = parse_mcts_maxiter_c(player_model_str)
+            return MCTSPlayerSkill(name=player_model_str, draft=self, maxiters=max_iters, c=c)
         elif player_model_str == 'assocrule':
             return AssocRulePlayer(draft=self)
         elif player_model_str == 'hwr':
             return HighestWinRatePlayer(draft=self)
         elif player_model_str.split("_")[0] == 'knn':
-            return KNNPlayer(draft=self, k=int(player_model_str.split("_")[1]))
+            return KNNPlayer(draft=self, k=int(player_model_str.split("_")[1]), distance=player_model_str.split("_")[2])
+        elif player_model_str.split("_")[0] == 'knn2':
+            return KNNPlayer2(draft=self, k=int(player_model_str.split("_")[1]), distance=player_model_str.split("_")[2])
         else:
             raise NotImplementedError
 
@@ -53,27 +61,45 @@ class Draft:
 
     def load_red_controllers(self):
         try:
-            con1 = open("input/red/player1.txt", "r").readlines()
-            con2 = open("input/red/player2.txt", "r").readlines()
-            con3 = open("input/red/player3.txt", "r").readlines()
-            con4 = open("input/red/player4.txt", "r").readlines()
-            con5 = open("input/red/player5.txt", "r").readlines()
+            con1 = self.calculatewinrates(open("input/red/player1.txt", "r").readlines())
+            con2 = self.calculatewinrates(open("input/red/player2.txt", "r").readlines())
+            con3 = self.calculatewinrates(open("input/red/player3.txt", "r").readlines())
+            con4 = self.calculatewinrates(open("input/red/player4.txt", "r").readlines())
+            con5 = self.calculatewinrates(open("input/red/player5.txt", "r").readlines())
             return [con1, con2, con3, con4, con5]
         except:
             return []
 
     def load_blue_controllers(self):
         try:
-            con1 = open("input/blue/player1.txt", "r").readlines()
-            con2 = open("input/blue/player2.txt", "r").readlines()
-            con3 = open("input/blue/player3.txt", "r").readlines()
-            con4 = open("input/blue/player4.txt", "r").readlines()
-            con5 = open("input/blue/player5.txt", "r").readlines()
+            con1 = self.calculatewinrates(open("input/blue/player1.txt", "r").readlines())
+            con2 = self.calculatewinrates(open("input/blue/player2.txt", "r").readlines())
+            con3 = self.calculatewinrates(open("input/blue/player3.txt", "r").readlines())
+            con4 = self.calculatewinrates(open("input/blue/player4.txt", "r").readlines())
+            con5 = self.calculatewinrates(open("input/blue/player5.txt", "r").readlines())
             return [con1, con2, con3, con4, con5]
         except:
             return []
 
-    def eval(self):
+    def eval(self, withcontrolers=False):
+        if withcontrolers:
+            assert self.end()
+            x = np.zeros((1, self.M_with_skill))
+            x[0, self.state[0]] = 1
+            x[0, self.state[1]] = -1
+            winrates = [self.findwinrate(self.controllers[0][0], self.state[0][0]),
+                        self.findwinrate(self.controllers[0][1], self.state[0][1]),
+                        self.findwinrate(self.controllers[0][2], self.state[0][2]),
+                        self.findwinrate(self.controllers[0][3], self.state[0][3]),
+                        self.findwinrate(self.controllers[0][4], self.state[0][4]),
+                        self.findwinrate(self.controllers[1][0], self.state[1][0]),
+                        self.findwinrate(self.controllers[1][1], self.state[1][1]),
+                        self.findwinrate(self.controllers[1][2], self.state[1][2]),
+                        self.findwinrate(self.controllers[1][3], self.state[1][3]),
+                        self.findwinrate(self.controllers[1][4], self.state[1][4])]
+            x = np.reshape(np.append(x[0], winrates), (-1, 123))
+            red_team_win_rate = self.outcome_model_with_skill.predict_proba(x)[0, 1]
+            return red_team_win_rate
         assert self.end()
         x = np.zeros((1, self.M))
         x[0, self.state[0]] = 1
@@ -88,12 +114,15 @@ class Draft:
         copy = Draft()
         copy.outcome_model = self.outcome_model
         copy.M = self.M
+        copy.outcome_model_with_skill = self.outcome_model_with_skill
+        copy.M_with_skill = self.M_with_skill
         copy.state = [self.state[0][:], self.state[1][:]]
         copy.avail_moves = set(self.avail_moves)
         copy.move_cnt = self.move_cnt[:]
         copy.player = self.player
         copy.next_player = self.next_player
         copy.player_models = self.player_models
+        copy.controllers = self.controllers
         return copy
 
     def move(self, move):
@@ -178,8 +207,30 @@ class Draft:
         if player == 0:
             if self.move_cnt[0] in pickrounds:
                 return self.controllers[0][pickrounds.index(self.move_cnt[0])]
+            return random.sample(self.controllers[0], 1)[0]
         else:
             if self.move_cnt[1] in pickrounds:
                 return self.controllers[1][pickrounds.index(self.move_cnt[1])]
-        return []
+            return random.sample(self.controllers[1], 1)[0]
 
+    def findwinrate(self, controller, heroid):
+        for hero in controller:
+            hero = hero.split(",")
+            id = int(hero[0].split(":")[1].replace('"',''))
+            if id == heroid:
+                gameplayed = int(hero[2].split(":")[1].replace('"',''))
+                if gameplayed == 0:
+                    return 0.0
+                return int(hero[3].split(":")[1].replace('"',''))/gameplayed
+        return 0.0
+
+    def calculatewinrates(self, controller):
+        ratings = [0]*(self.M_with_skill+1)
+        for hero in controller:
+            hero = hero.replace('"', '').split(',')
+            id = int(hero[0].split(':')[1])
+            games = int(hero[2].split(':')[1])
+            if games != 0 and id < 114:
+                wins = int(hero[3].split(':')[1])
+                ratings[id] = wins/games
+        return ratings
