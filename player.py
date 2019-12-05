@@ -22,6 +22,7 @@ class Player:
     def get_move(self, move_type):
         raise NotImplementedError
 
+
 class RandomPlayer(Player):
 
     def __init__(self, draft):
@@ -62,7 +63,7 @@ class MCTSPlayer(Player):
 
     def __init__(self, name, draft, maxiters, c):
         self.draft = draft
-        self.name =name
+        self.name = name
         self.maxiters = maxiters
         self.c = c
 
@@ -173,7 +174,7 @@ class AssocRulePlayer(Player):
         allies = frozenset(self.draft.get_state(player))
         oppo_player = player ^ 1
         # enemy id needs to add 1000
-        enemies = frozenset([i+1000 for i in self.draft.get_state(oppo_player)])
+        enemies = frozenset([i + 1000 for i in self.draft.get_state(oppo_player)])
 
         R = list()
 
@@ -185,7 +186,7 @@ class AssocRulePlayer(Player):
                 assoc = next(iter(assoc))  # extract the move from the set
                 if assoc in self.draft.get_moves():
                     win_sup = self.win_rules[key]
-                    lose_sup = self.lose_rules.get(key, 0.0)   # lose support may not exist
+                    lose_sup = self.lose_rules.get(key, 0.0)  # lose support may not exist
                     win_rate = win_sup / (win_sup + lose_sup)
                     ally_candidates.append((allies, key, assoc, win_rate))
         # select top 5 win rate association rules
@@ -197,7 +198,7 @@ class AssocRulePlayer(Player):
             intercept = enemies & key
             assoc = key - intercept
             if len(intercept) == 1 and len(assoc) == 1:
-                assoc = next(iter(assoc))       # extract the move from the set
+                assoc = next(iter(assoc))  # extract the move from the set
                 if assoc in self.draft.get_moves():
                     confidence = self.oppo_2_rules[key] / self.oppo_1_rules[intercept]
                     enemy_candidates.append((enemies, key, assoc, confidence))
@@ -211,7 +212,6 @@ class AssocRulePlayer(Player):
         else:
             move = random.choice(R)
             return move
-
 
 
 class KNNPlayer(Player):
@@ -243,7 +243,7 @@ class KNNPlayer(Player):
             count = 1
             for role in line[1][1:]:
                 s = role.replace("}", "").split(",")
-                switcher ={
+                switcher = {
                     0: "Carry",
                     1: "Escape",
                     2: "nuker",
@@ -257,7 +257,6 @@ class KNNPlayer(Player):
                 s = ",".join(s[0:3])
                 line[1][count] = s + ',"rolename":' + switcher.get(int(role[9]))
                 count += 1
-
 
             line[2] = line[2].split("{")
 
@@ -297,11 +296,11 @@ class KNNPlayer(Player):
                 roles = []
                 for role in hero.Roles:
                     roles.append(role.split(",")[-1].split(":")[-1])
-                rating.append((hero.ID, numpy.sqrt(abs(len(self.intersection(roles, perfekt.Roles))-len(perfekt.Roles)))))
+                rating.append(
+                    (hero.ID, numpy.sqrt(abs(len(self.intersection(roles, perfekt.Roles)) - len(perfekt.Roles)))))
         rating = sorted(rating, key=lambda x: x[-1])[:5]
 
         return self.findbest(rating, self.draft.getcontroller())
-
 
     def findbest(self, rating, player):
         newrating = []
@@ -312,10 +311,10 @@ class KNNPlayer(Player):
                 if rated[0] == id[1]:
                     winrate = 0
                     if int(hero[2].split(':')[1]) != 0:
-                        winrate = float(hero[3].split(':')[1])/float(hero[2].split(':')[1])
+                        winrate = float(hero[3].split(':')[1]) / float(hero[2].split(':')[1])
                     if winrate == 0:
                         winrate = 1
-                    newrating.append((id[1], rated[1]/winrate))
+                    newrating.append((id[1], rated[1] / winrate))
         if len(newrating) == 0:
             return int(random.sample(rating, 1)[0][0])
         return int(self.minintuble(newrating)[0])
@@ -325,7 +324,7 @@ class KNNPlayer(Player):
         return lst3
 
     def perfekt(self, allies):
-        allieprofiles=[]
+        allieprofiles = []
         if allies == []:
             return HeroProfile(id=0, name="", abilities=[], roles=self.allroles, talents=[],
                                stats=[])
@@ -335,9 +334,9 @@ class KNNPlayer(Player):
         roles = self.extractroles(allieprofiles)
 
         return HeroProfile(id=0, name="", abilities=[], roles=roles, talents=[],
-                               stats=[])
+                           stats=[])
 
-    def extractroles(self,profiles):
+    def extractroles(self, profiles):
         all = self.allroles.copy()
         for profile in profiles:
             for role in profile.Roles:
@@ -359,8 +358,47 @@ class MatrixFactorizationWinrate(Player):
         self.draft = draft
         self.name = 'mfw'
 
+    def startMatrix(self):
+        snmf = startNormalWinrateMatrixFac()
+        return snmf.start()
+
+    def getPlayers(self):
+        snmf = startNormalWinrateMatrixFac()
+        return snmf.getPlayers()
+
+    def getListOfChosenCharacters(self):
+        file = open("input/characters.txt", "r").readlines()
+        return file
+
+    def addCharactersToList(self, fileinput):
+        file = open("input/characters.txt", "r")
+        file.write(fileinput)
+        return file
+
     def get_move(self, move_type):
-        startNormalWinrateMatrixFac()
+        if move_type == 'ban':
+            self.getBanMove()
+        else:
+            self.getBestMove()
+
+    def getBestMove(self, player):
+        nmf = self.startMatrix()
+        nmfp = self.getPlayers()
+        if player == 1:
+            maxval = 0
+            for x in range(0, len(nmf[0])):
+                if nmf[0][x] > maxval:
+                    maxval = nmf[0][x]
+                    for i in [i for i, x in enumerate(nmfp[0][i][9][0]) if x == maxval]:
+                        id = nmfp[0][i][0][1]
+                        if id not in self.getListOfChosenCharacters():
+                            self.addCharactersToList(id)
+                            return id
+        return []
+
+    def getBanMove(self):
+
+        return []
 
 
 class MatrixFactorizationThreshold(Player):
@@ -369,4 +407,7 @@ class MatrixFactorizationThreshold(Player):
         self.name = 'mft'
 
     def get_move(self, move_type):
-        startTresholdMatrixFac()
+        if move_type == 'ban':
+            startTresholdMatrixFac()
+        else:
+            self.getBestMove()
