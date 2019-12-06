@@ -1,5 +1,5 @@
 from player import RandomPlayer, MCTSPlayer, AssocRulePlayer, HighestWinRatePlayer, KNNPlayer, MCTSPlayerSkill, \
-    KNNPlayer2, MatrixFactorizationWinratePlayer
+    KNNPlayer2, MatrixFactorizationWinratePlayer, MatrixFactorizationThresholdPlayer
 from utils.parser import parse_mcts_maxiter_c, parse_rave_maxiter_c_k
 import pickle
 import logging
@@ -53,6 +53,8 @@ class Draft:
                               distance=player_model_str.split("_")[2])
         elif player_model_str.startswith('mfw'):
             return MatrixFactorizationWinratePlayer(draft=self)
+        elif player_model_str.startswith('mfth'):
+            return MatrixFactorizationThresholdPlayer(draft=self)
         else:
             raise NotImplementedError
 
