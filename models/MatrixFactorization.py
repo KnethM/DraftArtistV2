@@ -51,8 +51,8 @@ class MF():
             self.sgd()
             mse = self.mse()
             training_process.append((i, mse))
-            """if (i + 1) % 10 == 0:
-                print("Iteration: %d ; error = %.4f" % (i + 1, mse))"""
+            if (i + 1) % 10 == 0:
+                print("Iteration: %d ; error = %.4f" % (i + 1, mse))
 
         return training_process
 
@@ -410,7 +410,7 @@ class startNormalWinrateMatrixFac():
     pl = importPlayers()
 
     def start(self):
-        mf = MF(self.nmf.getListOfCharacters(), K=10, alpha=0.01, beta=0.01, iterations=10)
+        mf = MF(self.nmf.getListOfCharacters(), K=10, alpha=0.01, beta=0.01, iterations=1000)
         training_process = mf.train()
         """print()
         print("Full Matrix")
@@ -431,7 +431,7 @@ class startTresholdMatrixFac():
     def start(self):
         thmf = thresholdMatrixFac()
         thmf.setThreshold(0.60)
-        mfth = MF(thmf.getListOfCharacters(), K=10, alpha=0.01, beta=0.01, iterations=10)
+        mfth = MF(thmf.getListOfCharacters(), K=10, alpha=0.01, beta=0.01, iterations=1000)
         training_process_th = mfth.train()
         """print()
         print("Full Matrix")
