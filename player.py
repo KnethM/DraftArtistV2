@@ -780,4 +780,67 @@ class MatrixFactorizationThreshold(Player):
             self.getBestMove()
 
     def getBestMove(self):
-        pass
+        moveCount = self.draft.move_cnt
+        player = 0
+        team = self.draft.next_player
+
+        if team == 0:
+            """Red Team"""
+            player = self.getPlayerRed(moveCount[0])
+        elif team == 1:
+            """Blue Team"""
+            player = self.getPlayerBlue(moveCount[1])
+
+        if player == 1:
+            return self.getBestId(self.nmf, self.nmfp, 0, [])
+        elif player == 2:
+            return self.getBestId(self.nmf, self.nmfp, 1, [])
+        elif player == 3:
+            return self.getBestId(self.nmf, self.nmfp, 2, [])
+        elif player == 4:
+            return self.getBestId(self.nmf, self.nmfp, 3, [])
+        elif player == 5:
+            return self.getBestId(self.nmf, self.nmfp, 4, [])
+        elif player == 6:
+            return self.getBestId(self.nmf, self.nmfp, 5, [])
+        elif player == 7:
+            return self.getBestId(self.nmf, self.nmfp, 6, [])
+        elif player == 8:
+            return self.getBestId(self.nmf, self.nmfp, 7, [])
+        elif player == 9:
+            return self.getBestId(self.nmf, self.nmfp, 8, [])
+        elif player == 10:
+            return self.getBestId(self.nmf, self.nmfp, 9, [])
+
+
+    def getBanMove(self):
+        player = 0
+        team = self.draft.next_player
+
+        if team == 0:
+            """Red Team"""
+            player = random.randint(1, 5)
+        elif team == 1:
+            """Blue Team"""
+            player = random.randint(6, 10)
+
+        if player == 1:
+            return self.getBestId(self.nmf, self.nmfp, 0, [])
+        elif player == 2:
+            return self.getBestId(self.nmf, self.nmfp, 1, [])
+        elif player == 3:
+            return self.getBestId(self.nmf, self.nmfp, 2, [])
+        elif player == 4:
+            return self.getBestId(self.nmf, self.nmfp, 3, [])
+        elif player == 5:
+            return self.getBestId(self.nmf, self.nmfp, 4, [])
+        elif player == 6:
+            return self.getBestId(self.nmf, self.nmfp, 5, [])
+        elif player == 7:
+            return self.getBestId(self.nmf, self.nmfp, 6, [])
+        elif player == 8:
+            return self.getBestId(self.nmf, self.nmfp, 7, [])
+        elif player == 9:
+            return self.getBestId(self.nmf, self.nmfp, 8, [])
+        elif player == 10:
+            return self.getBestId(self.nmf, self.nmfp, 9, [])
