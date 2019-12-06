@@ -126,7 +126,7 @@ class MCTSPlayerSkill(Player):
 
     def __init__(self, name, draft, maxiters, c):
         self.draft = draft
-        self.name =name
+        self.name = name
         self.maxiters = maxiters
         self.c = c
 
@@ -389,35 +389,36 @@ class KNNPlayer(Player):
         else:
             raise NotImplementedError
 
-    def euclidiandis(self,roles, missingroles):
+    def euclidiandis(self, roles, missingroles):
         return numpy.sqrt(abs(len(self.intersection(roles, missingroles)) - len(missingroles)))
 
     def manhattendis(self, roles, missingroles):
         return abs(len(self.intersection(roles, missingroles)) - len(missingroles))
 
     def CosD(self, roles, missingroles):
-        i = (numpy.sqrt(len(self.intersection(roles, missingroles))**2) * numpy.sqrt(len(missingroles)**2))
+        i = (numpy.sqrt(len(self.intersection(roles, missingroles)) ** 2) * numpy.sqrt(len(missingroles) ** 2))
         if i == 0:
             return numpy.inf
         return (len(self.intersection(roles, missingroles)) * len(missingroles)) / i
 
     def SCD(self, roles, missingroles):
-        return (numpy.sqrt(len(self.intersection(roles, missingroles))) - numpy.sqrt(len(missingroles)))**2
+        return (numpy.sqrt(len(self.intersection(roles, missingroles))) - numpy.sqrt(len(missingroles))) ** 2
 
     def SED(self, roles, missingroles):
-        return (abs(len(self.intersection(roles, missingroles)) - len(missingroles)))**2
+        return (abs(len(self.intersection(roles, missingroles)) - len(missingroles))) ** 2
 
     def KDD(self, roles, missingroles):
         i = len(self.intersection(roles, missingroles)) + len(missingroles)
         if i == 0:
             return numpy.inf
-        return len(self.intersection(roles, missingroles)) * numpy.log2((2*len(self.intersection(roles, missingroles)))/i)
+        return len(self.intersection(roles, missingroles)) * numpy.log2(
+            (2 * len(self.intersection(roles, missingroles))) / i)
 
     def VWHD(self, roles, missingroles):
         i = min(len(self.intersection(roles, missingroles)), len(missingroles))
-        if i==0 :
+        if i == 0:
             return numpy.inf
-        return (abs(len(self.intersection(roles, missingroles)) - len(missingroles)))/i
+        return (abs(len(self.intersection(roles, missingroles)) - len(missingroles))) / i
 
     # From the K Nearest Neighbours find the best
     # hero in regards to the player in question
@@ -434,7 +435,7 @@ class KNNPlayer(Player):
             hero = dictionary.get(rated[0])
             winrate = 0
             if int(hero[2].split(':')[1]) != 0:
-                winrate = float(hero[3].split(':')[1])/float(hero[2].split(':')[1])
+                winrate = float(hero[3].split(':')[1]) / float(hero[2].split(':')[1])
             newrating.append((rated[0], winrate))
         if len(newrating) == 0:
             return int(random.sample(rating, 1)[0][0])
@@ -467,7 +468,7 @@ class KNNPlayer(Player):
 
     # Given a list of profiles returns the list of roles
     # of every hero
-    def extractroles(self,profiles):
+    def extractroles(self, profiles):
         all = self.allroles.copy()
         for profile in profiles:
             for role in profile.Roles:
@@ -475,6 +476,7 @@ class KNNPlayer(Player):
                 if role in all:
                     all.remove(role)
         return all
+
 
 class KNNPlayer2(Player):
 
@@ -542,11 +544,11 @@ class KNNPlayer2(Player):
         return prediction
 
     def pred(self, a, n, p):
-        suma=0
+        suma = 0
         for i in range(len(a)):
             if i != p:
                 suma += a[i]
-        suma = suma/(len(a)-1)
+        suma = suma / (len(a) - 1)
         addsim = 0
         for naighbor in n:
             addsim += naighbor[1]
@@ -555,8 +557,8 @@ class KNNPlayer2(Player):
             for i in range(len(naighbor[0])):
                 if i != p:
                     sumnab += naighbor[0][i]
-            sumnab = sumnab/(len(naighbor[0]) - 1)
-            suma += (naighbor[1]/addsim)*(naighbor[0][p]-sumnab)
+            sumnab = sumnab / (len(naighbor[0]) - 1)
+            suma += (naighbor[1] / addsim) * (naighbor[0][p] - sumnab)
 
         return suma
 
@@ -591,31 +593,31 @@ class KNNPlayer2(Player):
         row2_squrd = 0
         for i in range(len(row1)):
             if i != predcol:
-                top += row1[i]*row2[i]
-                row1_squrd += row1[i]**2
-                row2_squrd += row2[i]**2
-        return top/(math.sqrt(row1_squrd)*math.sqrt(row2_squrd))
+                top += row1[i] * row2[i]
+                row1_squrd += row1[i] ** 2
+                row2_squrd += row2[i] ** 2
+        return top / (math.sqrt(row1_squrd) * math.sqrt(row2_squrd))
 
     def SCD(self, row1, row2, predcol):
         distance = 0.0
         for i in range(len(row1)):
             if i != predcol:
-                distance += (math.sqrt(row1[i])-math.sqrt(row2[i]))**2
+                distance += (math.sqrt(row1[i]) - math.sqrt(row2[i])) ** 2
         return distance
 
     def SED(self, row1, row2, predcol):
         distance = 0.0
         for i in range(len(row1)):
             if i != predcol:
-                distance += (row1[i] - row2[i])**2
+                distance += (row1[i] - row2[i]) ** 2
         return distance
 
     def KDD(self, row1, row2, predcol):
         distance = 0.0
         for i in range(len(row1)):
             divider = row1[i] + row2[i]
-            top = 2*row1[i]
-            if i != predcol and divider !=0 and top != 0:
+            top = 2 * row1[i]
+            if i != predcol and divider != 0 and top != 0:
                 distance += abs(row1[i] * math.log2(top / divider))
         return distance
 
@@ -624,13 +626,16 @@ class KNNPlayer2(Player):
         for i in range(len(row1)):
             divider = min(row1[i], row2[i])
             if i != predcol and divider != 0:
-                distance += abs(row1[i]-row2[i]/divider)
+                distance += abs(row1[i] - row2[i] / divider)
         return distance
 
-class MatrixFactorizationWinrate(Player):
+
+class MatrixFactorizationWinratePlayer(Player):
     def __init__(self, draft):
         self.draft = draft
         self.name = 'mfw'
+        self.nmf = self.startMatrix()
+        self.nmfp = self.getPlayers()
 
     def startMatrix(self):
         snmf = startNormalWinrateMatrixFac()
@@ -640,39 +645,127 @@ class MatrixFactorizationWinrate(Player):
         snmf = startNormalWinrateMatrixFac()
         return snmf.getPlayers()
 
-    def getListOfChosenCharacters(self):
-        file = open("input/characters.txt", "r").readlines()
-        return file
+    def getPlayerRed(self, movecount):
+        players = [3, 4, 7, 8, 10]
+        player = 0
+        for i in range(0, 10):
+            if movecount == players[i]:
+                if players[i] == 3:
+                    return 6
+                elif players[i] == 4:
+                    return 7
+                elif players[i] == 7:
+                    return 8
+                elif players[i] == 8:
+                    return 9
+                elif players[i] == 10:
+                    return 10
+        return player
 
-    def addCharactersToList(self, fileinput):
-        file = open("input/characters.txt", "r")
-        file.write(fileinput)
-        return file
+    def getPlayerBlue(self, movecount):
+        players = [3, 4, 7, 8, 10]
+        player = 0
+        for i in range(0, 10):
+            if movecount == players[i]:
+                if players[i] == 3:
+                    return 1
+                elif players[i] == 4:
+                    return 2
+                elif players[i] == 7:
+                    return 3
+                elif players[i] == 8:
+                    return 4
+                elif players[i] == 10:
+                    return 5
+        return player
+
+    def getBestId(self, nmf, nmfp, player, listOfMax):
+        maxval = 0
+        id = -1
+        i = 0
+        for x in range(0, len(nmf[player])):
+            if nmf[player][x] > maxval and nmf[player][x] not in listOfMax:
+                maxval = nmf[player][x]
+                i = x
+        if nmfp[player][i][0][1] in self.draft.avail_moves:
+            id = nmfp[player][i][0][1]
+        else:
+            listOfMax += [maxval]
+            maxval = 0
+            id = self.getBestId(nmf, nmfp, player, listOfMax)
+        return id
 
     def get_move(self, move_type):
         if move_type == 'ban':
-            self.getBanMove()
+            return self.getBanMove()
         else:
-            self.getBestMove()
+            return self.getBestMove()
 
-    def getBestMove(self, player):
-        nmf = self.startMatrix()
-        nmfp = self.getPlayers()
+    def getBestMove(self):
+        moveCount = self.draft.move_cnt
+        player = 0
+        team = self.draft.next_player
+
+        if team == 0:
+            """Red Team"""
+            player = self.getPlayerRed(moveCount[0])
+        elif team == 1:
+            """Blue Team"""
+            player = self.getPlayerBlue(moveCount[1])
+
         if player == 1:
-            maxval = 0
-            for x in range(0, len(nmf[0])):
-                if nmf[0][x] > maxval:
-                    maxval = nmf[0][x]
-                    for i in [i for i, x in enumerate(nmfp[0][i][9][0]) if x == maxval]:
-                        id = nmfp[0][i][0][1]
-                        if id not in self.getListOfChosenCharacters():
-                            self.addCharactersToList(id)
-                            return id
-        return []
+            return self.getBestId(self.nmf, self.nmfp, 0, [])
+        elif player == 2:
+            return self.getBestId(self.nmf, self.nmfp, 1, [])
+        elif player == 3:
+            return self.getBestId(self.nmf, self.nmfp, 2, [])
+        elif player == 4:
+            return self.getBestId(self.nmf, self.nmfp, 3, [])
+        elif player == 5:
+            return self.getBestId(self.nmf, self.nmfp, 4, [])
+        elif player == 6:
+            return self.getBestId(self.nmf, self.nmfp, 5, [])
+        elif player == 7:
+            return self.getBestId(self.nmf, self.nmfp, 6, [])
+        elif player == 8:
+            return self.getBestId(self.nmf, self.nmfp, 7, [])
+        elif player == 9:
+            return self.getBestId(self.nmf, self.nmfp, 8, [])
+        elif player == 10:
+            return self.getBestId(self.nmf, self.nmfp, 9, [])
+
 
     def getBanMove(self):
+        player = 0
+        team = self.draft.next_player
 
-        return []
+        if team == 0:
+            """Red Team"""
+            player = random.randint(1, 5)
+        elif team == 1:
+            """Blue Team"""
+            player = random.randint(6, 10)
+
+        if player == 1:
+            return self.getBestId(self.nmf, self.nmfp, 0, [])
+        elif player == 2:
+            return self.getBestId(self.nmf, self.nmfp, 1, [])
+        elif player == 3:
+            return self.getBestId(self.nmf, self.nmfp, 2, [])
+        elif player == 4:
+            return self.getBestId(self.nmf, self.nmfp, 3, [])
+        elif player == 5:
+            return self.getBestId(self.nmf, self.nmfp, 4, [])
+        elif player == 6:
+            return self.getBestId(self.nmf, self.nmfp, 5, [])
+        elif player == 7:
+            return self.getBestId(self.nmf, self.nmfp, 6, [])
+        elif player == 8:
+            return self.getBestId(self.nmf, self.nmfp, 7, [])
+        elif player == 9:
+            return self.getBestId(self.nmf, self.nmfp, 8, [])
+        elif player == 10:
+            return self.getBestId(self.nmf, self.nmfp, 9, [])
 
 
 class MatrixFactorizationThreshold(Player):
@@ -685,3 +778,6 @@ class MatrixFactorizationThreshold(Player):
             startTresholdMatrixFac()
         else:
             self.getBestMove()
+
+    def getBestMove(self):
+        pass

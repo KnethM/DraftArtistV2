@@ -51,8 +51,8 @@ class MF():
             self.sgd()
             mse = self.mse()
             training_process.append((i, mse))
-            if (i + 1) % 10 == 0:
-                print("Iteration: %d ; error = %.4f" % (i + 1, mse))
+            """if (i + 1) % 10 == 0:
+                print("Iteration: %d ; error = %.4f" % (i + 1, mse))"""
 
         return training_process
 
@@ -104,23 +104,23 @@ class MF():
 class importPlayers():
     def importPlayerBlue(self):
         playerlist = []
-        with open("../input/blue/Player1.txt", "r") as p1:
+        with open("input/blue/Player1.txt", "r") as p1:
             inputstring = p1.read()
             player1red = inputstring.split("\n")
             playerlist.append(player1red)
-        with open("../input/blue/Player2.txt", "r") as p2:
+        with open("input/blue/Player2.txt", "r") as p2:
             inputstring = p2.read()
             player2red = [inputstring.split("\n")]
             playerlist.append(player2red)
-        with open("../input/blue/Player3.txt", "r") as p3:
+        with open("input/blue/Player3.txt", "r") as p3:
             inputstring = p3.read()
             player3red = [inputstring.split("\n")]
             playerlist.append(player3red)
-        with open("../input/blue/Player4.txt", "r") as p4:
+        with open("input/blue/Player4.txt", "r") as p4:
             inputstring = p4.read()
             player4red = [inputstring.split("\n")]
             playerlist.append(player4red)
-        with open("../input/blue/Player5.txt", "r") as p5:
+        with open("input/blue/Player5.txt", "r") as p5:
             inputstring = p5.read()
             player5red = [inputstring.split("\n")]
             playerlist.append(player5red)
@@ -128,23 +128,23 @@ class importPlayers():
 
     def importPlayerRed(self):
         playerlist = []
-        with open("../input/red/Player1.txt", "r") as p1:
+        with open("input/red/Player1.txt", "r") as p1:
             inputstring = p1.read()
             player1blue = inputstring.split("\n")
             playerlist.append(player1blue)
-        with open("../input/red/Player2.txt", "r") as p2:
+        with open("input/red/Player2.txt", "r") as p2:
             inputstring = p2.read()
             player2blue = [inputstring.split("\n")]
             playerlist.append(player2blue)
-        with open("../input/red/Player3.txt", "r") as p3:
+        with open("input/red/Player3.txt", "r") as p3:
             inputstring = p3.read()
             player3blue = [inputstring.split("\n")]
             playerlist.append(player3blue)
-        with open("../input/red/Player4.txt", "r") as p4:
+        with open("input/red/Player4.txt", "r") as p4:
             inputstring = p4.read()
             player4blue = [inputstring.split("\n")]
             playerlist.append(player4blue)
-        with open("../input/red/Player5.txt", "r") as p5:
+        with open("input/red/Player5.txt", "r") as p5:
             inputstring = p5.read()
             player5blue = [inputstring.split("\n")]
             playerlist.append(player5blue)
@@ -410,7 +410,7 @@ class startNormalWinrateMatrixFac():
     pl = importPlayers()
 
     def start(self):
-        mf = MF(self.nmf.getListOfCharacters(), K=10, alpha=0.01, beta=0.01, iterations=1000)
+        mf = MF(self.nmf.getListOfCharacters(), K=10, alpha=0.01, beta=0.01, iterations=10)
         training_process = mf.train()
         """print()
         print("Full Matrix")
@@ -431,14 +431,14 @@ class startTresholdMatrixFac():
     def start(self):
         thmf = thresholdMatrixFac()
         thmf.setThreshold(0.60)
-        mfth = MF(thmf.getListOfCharacters(), K=10, alpha=0.01, beta=0.01, iterations=1000)
+        mfth = MF(thmf.getListOfCharacters(), K=10, alpha=0.01, beta=0.01, iterations=10)
         training_process_th = mfth.train()
         """print()
         print("Full Matrix")
         print(mfth.full_matrix())"""
         return mfth.full_matrix()
 
-
+"""
 def printTestResultnormal(test, val1, val2):
     ip = importPlayers()
     playerListSorted = ip.getPlayerlistSorted()
@@ -531,4 +531,4 @@ print()
 print()
 print("Threshold matrix")
 stmf = startTresholdMatrixFac()
-printTestResult(stmf.start())
+printTestResult(stmf.start())"""
