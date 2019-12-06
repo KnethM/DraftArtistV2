@@ -423,3 +423,63 @@ class KNNPlayer(Player):
                 if role in all:
                     all.remove(role)
         return all
+
+
+class MatrixFactorizationWinrate(Player):
+    def __init__(self, draft):
+        self.draft = draft
+        self.name = 'mfw'
+
+    def startMatrix(self):
+        snmf = startNormalWinrateMatrixFac()
+        return snmf.start()
+
+    def getPlayers(self):
+        snmf = startNormalWinrateMatrixFac()
+        return snmf.getPlayers()
+
+    def getListOfChosenCharacters(self):
+        file = open("input/characters.txt", "r").readlines()
+        return file
+
+    def addCharactersToList(self, fileinput):
+        file = open("input/characters.txt", "r")
+        file.write(fileinput)
+        return file
+
+    def get_move(self, move_type):
+        if move_type == 'ban':
+            self.getBanMove()
+        else:
+            self.getBestMove()
+
+    def getBestMove(self, player):
+        nmf = self.startMatrix()
+        nmfp = self.getPlayers()
+        if player == 1:
+            maxval = 0
+            for x in range(0, len(nmf[0])):
+                if nmf[0][x] > maxval:
+                    maxval = nmf[0][x]
+                    for i in [i for i, x in enumerate(nmfp[0][i][9][0]) if x == maxval]:
+                        id = nmfp[0][i][0][1]
+                        if id not in self.getListOfChosenCharacters():
+                            self.addCharactersToList(id)
+                            return id
+        return []
+
+    def getBanMove(self):
+
+        return []
+
+
+class MatrixFactorizationThreshold(Player):
+    def __init__(self, draft):
+        self.draft = draft
+        self.name = 'mft'
+
+    def get_move(self, move_type):
+        if move_type == 'ban':
+            startTresholdMatrixFac()
+        else:
+            self.getBestMove()

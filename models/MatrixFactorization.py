@@ -523,64 +523,10 @@ def printTestResult(test):
     print(win2)
 
 
-class MatrixFactorizationWinrate():
-    def __init__(self, draft):
-        self.draft = draft
-        self.name = 'mfw'
-
-    def startMatrix(self):
-        snmf = startNormalWinrateMatrixFac()
-        return snmf.start()
-
-    def getPlayers(self):
-        snmf = startNormalWinrateMatrixFac()
-        return snmf.getPlayers()
-
-    def getListOfChosenCharacters(self):
-        file = open("../input/characters.txt", "r").readlines()
-        return file
-
-    def addCharactersToList(self, fileinput):
-        file = open("../input/characters.txt", "w")
-        file.writelines(fileinput)
-        return file
-
-    def get_move(self, move_type):
-        if move_type == 'ban':
-            self.getBanMove()
-        else:
-            self.getBestMove()
-
-    def getBestMove(self, player):
-        "List of characters that is not suitable for picks"
-        charNotAbleToPick = [0, 24, 114, 119, 120, 121, 129]
-        nmf = self.startMatrix()
-        nmfp = self.getPlayers()
-        if player == 1:
-            maxval = 0
-            for u in range(0, len(nmf[0])):
-                if nmf[0][u] > maxval:
-                    maxval = nmf[0][u]
-                    bestID = nmfp[0][u][0][1]
-                    if bestID not in charNotAbleToPick:
-                        if bestID not in self.getListOfChosenCharacters():
-                            self.addCharactersToList(str(bestID))
-                            return bestID
-        return []
-
-    def getBanMove(self):
-
-        return []
-
-
-mf = MatrixFactorizationWinrate(1)
-print(mf.getBestMove(1))
-
 print()
 print("Normal matrix winrate")
 snwmf = startNormalWinrateMatrixFac()
 printTestResultnormal(snwmf.start(), snwmf.getValues(1), snwmf.getValues(10))
-print(snwmf.getPlayers())
 print()
 print()
 print("Threshold matrix")
