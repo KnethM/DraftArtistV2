@@ -1,5 +1,6 @@
 import numpy as np
 import pickle as pp
+import Data.kfolds as kfs
 from models import MLPclass as mlp
 
 # Method for discretizing the data even further by cleaning it up and abstracting the numbers.
@@ -33,11 +34,11 @@ def discretize():
             del matchlist[index]
 
         # go through the list and convert each string to an integer
-        for str in matchlist:
-            templist.append(int(str))
+        for string in matchlist:
+            templist.append(int(string))
 
         #numpy array of 0's with size 123 (113 heroes + 10 player winrates)
-        finallist = np.zeros((123))
+        finallist = np.zeros(123)
 
         # go through the list on index numbers and set their value to 1 for radiant team hero picks
         # and -1 for dire team hero picks.
@@ -60,22 +61,31 @@ def discretize():
         # append the cleaned up information for a match to list of matches
         x.append(finallist)
 
+    # convert the boolean values to integer values.
     y = indextoint(y)
 
-    # trains the classifier on the data and places the trained classifier in mlpc
-    mlpc = mlp.classifier.Dotaclf1layer.fit(x,y)
-    mlpclist = []
-    mlpclist.append(mlpc)
-    mlpclist.append(113)
+    x = np.array(x)
+    y = np.array(y)
 
-    pp.dump(mlpclist, open('mlp.pickle', "wb"))
+    np.save("Trainingdata", x)
+    np.save("Solutiondata", y)
 
-    mlpload = pp.load(open('mlp.pickle', "rb"))
-    print(mlpload)
 
-    # Tries to predict the outcome of an input
-    #a = mlpc.predict_proba(x[255].reshape(1,-1))[0,1]
-    #print(a)
+
+
+def trainNN():
+
+    trainingdata = np.load('Trainingdata.npy')
+    solutiondata = np.load('Solutiondata.npy')
+
+    #Run kfolds function to get out 10-kfolds for our training and testing data.
+    trainingdata, testingdata = kfs.kfolds(trainingdata)
+    s_trainingdata, s_testingdata = kfs.kfolds(solutiondata)
+
+    for index in range(0, 10):
+        train_NN1(trainingdata[index], s_trainingdata[index], "NN" + str(index))
+        train_NN2(trainingdata[index], s_trainingdata[index], "NN" + str(index))
+
  
 # Går gennem listen og ændre alle "true" til 1 og "false" til 0
 def indextoint(list):
@@ -87,6 +97,7 @@ def indextoint(list):
             newlist.append(0)
     return newlist
 
+
 def removefromstring(match, characters):
 
     # Go through the list and remove any occurencess of [] , '
@@ -94,5 +105,33 @@ def removefromstring(match, characters):
     cleanedstring = match.translate(trantab)
     return cleanedstring
 
+
+def train_NN1(data, solution, picklename):
+
+    # trains the classifier on the data and places the trained classifier in mlpc
+    mlpc = mlp.classifier.Dotaclf1layer.fit(data, solution)
+    mlpclist = [mlpc, 113]
+
+    pp.dump(mlpclist, open((picklename + '_1layer.pickle'), "wb"))
+
+    #Function used to load the pickle and save the data into mlpload
+    #mlpload = pp.load(open('mlp.pickle', "rb"))
+
+    # Tries to predict the outcome of an input
+    #a = mlpc.predict_proba(x[255].reshape(1,-1))[0,1]
+    #print(a)
+
+def train_NN2(data, solution, picklename):
+
+    # trains the classifier on the data and places the trained classifier in mlpc
+    mlpc = mlp.classifier.Dotaclf2layer.fit(data, solution)
+    mlpclist = [mlpc, 113]
+
+    pp.dump(mlpclist, open((picklename + '_2layer.pickle'), "wb"))
+
+
+
 if __name__ == '__main__':
     discretize()
+    #Run this function aswell if you wanna train a set of new NN
+    #trainNN()
