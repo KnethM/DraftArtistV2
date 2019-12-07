@@ -1,4 +1,5 @@
-from player import RandomPlayer, MCTSPlayer, AssocRulePlayer, HighestWinRatePlayer, KNNPlayer, MCTSPlayerSkill, KNNPlayer2
+from player import RandomPlayer, MCTSPlayer, AssocRulePlayer, HighestWinRatePlayer, KNNPlayer, MCTSPlayerSkill, \
+    KNNPlayer2, MatrixFactorizationWinratePlayer, MatrixFactorizationThresholdPlayer
 from utils.parser import parse_mcts_maxiter_c, parse_rave_maxiter_c_k
 import pickle
 import logging
@@ -48,7 +49,12 @@ class Draft:
         elif player_model_str.split("_")[0] == 'knn':
             return KNNPlayer(draft=self, k=int(player_model_str.split("_")[1]), distance=player_model_str.split("_")[2])
         elif player_model_str.split("_")[0] == 'knn2':
-            return KNNPlayer2(draft=self, k=int(player_model_str.split("_")[1]), distance=player_model_str.split("_")[2])
+            return KNNPlayer2(draft=self, k=int(player_model_str.split("_")[1]),
+                              distance=player_model_str.split("_")[2])
+        elif player_model_str.startswith('mfw'):
+            return MatrixFactorizationWinratePlayer(draft=self)
+        elif player_model_str.startswith('mfth'):
+            return MatrixFactorizationThresholdPlayer(draft=self)
         else:
             raise NotImplementedError
 
@@ -202,7 +208,7 @@ class Draft:
         return move_str
 
     def getcontroller(self):
-        pickrounds = [3,4,7,8,10]
+        pickrounds = [3, 4, 7, 8, 10]
         player = self.next_player
         if player == 0:
             if self.move_cnt[0] in pickrounds:
@@ -216,21 +222,21 @@ class Draft:
     def findwinrate(self, controller, heroid):
         for hero in controller:
             hero = hero.split(",")
-            id = int(hero[0].split(":")[1].replace('"',''))
+            id = int(hero[0].split(":")[1].replace('"', ''))
             if id == heroid:
-                gameplayed = int(hero[2].split(":")[1].replace('"',''))
+                gameplayed = int(hero[2].split(":")[1].replace('"', ''))
                 if gameplayed == 0:
                     return 0.0
-                return int(hero[3].split(":")[1].replace('"',''))/gameplayed
+                return int(hero[3].split(":")[1].replace('"', '')) / gameplayed
         return 0.0
 
     def calculatewinrates(self, controller):
-        ratings = [0]*(self.M_with_skill+1)
+        ratings = [0] * (self.M_with_skill + 1)
         for hero in controller:
             hero = hero.replace('"', '').split(',')
             id = int(hero[0].split(':')[1])
             games = int(hero[2].split(':')[1])
             if games != 0 and id < 114:
                 wins = int(hero[3].split(':')[1])
-                ratings[id] = wins/games
+                ratings[id] = wins / games
         return ratings

@@ -2,6 +2,8 @@ import random
 import math
 import os
 from models.heroprofile import HeroProfile
+from models.MatrixFactorization import startNormalWinrateMatrixFac
+from models.MatrixFactorization import startTresholdMatrixFac
 from node import Node
 import logging
 import numpy
@@ -21,6 +23,7 @@ class Player:
 
     def get_move(self, move_type):
         raise NotImplementedError
+
 
 class RandomPlayer(Player):
 
@@ -62,7 +65,7 @@ class MCTSPlayer(Player):
 
     def __init__(self, name, draft, maxiters, c):
         self.draft = draft
-        self.name =name
+        self.name = name
         self.maxiters = maxiters
         self.c = c
 
@@ -123,7 +126,7 @@ class MCTSPlayerSkill(Player):
 
     def __init__(self, name, draft, maxiters, c):
         self.draft = draft
-        self.name =name
+        self.name = name
         self.maxiters = maxiters
         self.c = c
 
@@ -234,7 +237,7 @@ class AssocRulePlayer(Player):
         allies = frozenset(self.draft.get_state(player))
         oppo_player = player ^ 1
         # enemy id needs to add 1000
-        enemies = frozenset([i+1000 for i in self.draft.get_state(oppo_player)])
+        enemies = frozenset([i + 1000 for i in self.draft.get_state(oppo_player)])
 
         R = list()
 
@@ -246,7 +249,7 @@ class AssocRulePlayer(Player):
                 assoc = next(iter(assoc))  # extract the move from the set
                 if assoc in self.draft.get_moves():
                     win_sup = self.win_rules[key]
-                    lose_sup = self.lose_rules.get(key, 0.0)   # lose support may not exist
+                    lose_sup = self.lose_rules.get(key, 0.0)  # lose support may not exist
                     win_rate = win_sup / (win_sup + lose_sup)
                     ally_candidates.append((allies, key, assoc, win_rate))
         # select top 5 win rate association rules
@@ -258,7 +261,7 @@ class AssocRulePlayer(Player):
             intercept = enemies & key
             assoc = key - intercept
             if len(intercept) == 1 and len(assoc) == 1:
-                assoc = next(iter(assoc))       # extract the move from the set
+                assoc = next(iter(assoc))  # extract the move from the set
                 if assoc in self.draft.get_moves():
                     confidence = self.oppo_2_rules[key] / self.oppo_1_rules[intercept]
                     enemy_candidates.append((enemies, key, assoc, confidence))
@@ -306,7 +309,7 @@ class KNNPlayer(Player):
             count = 1
             for role in line[1][1:]:
                 s = role.replace("}", "").split(",")
-                switcher ={
+                switcher = {
                     0: "Carry",
                     1: "Escape",
                     2: "nuker",
@@ -320,7 +323,6 @@ class KNNPlayer(Player):
                 s = ",".join(s[0:3])
                 line[1][count] = s + ',"rolename":' + switcher.get(int(role[9]))
                 count += 1
-
 
             line[2] = line[2].split("{")
 
@@ -387,35 +389,36 @@ class KNNPlayer(Player):
         else:
             raise NotImplementedError
 
-    def euclidiandis(self,roles, missingroles):
+    def euclidiandis(self, roles, missingroles):
         return numpy.sqrt(abs(len(self.intersection(roles, missingroles)) - len(missingroles)))
 
     def manhattendis(self, roles, missingroles):
         return abs(len(self.intersection(roles, missingroles)) - len(missingroles))
 
     def CosD(self, roles, missingroles):
-        i = (numpy.sqrt(len(self.intersection(roles, missingroles))**2) * numpy.sqrt(len(missingroles)**2))
+        i = (numpy.sqrt(len(self.intersection(roles, missingroles)) ** 2) * numpy.sqrt(len(missingroles) ** 2))
         if i == 0:
             return numpy.inf
         return (len(self.intersection(roles, missingroles)) * len(missingroles)) / i
 
     def SCD(self, roles, missingroles):
-        return (numpy.sqrt(len(self.intersection(roles, missingroles))) - numpy.sqrt(len(missingroles)))**2
+        return (numpy.sqrt(len(self.intersection(roles, missingroles))) - numpy.sqrt(len(missingroles))) ** 2
 
     def SED(self, roles, missingroles):
-        return (abs(len(self.intersection(roles, missingroles)) - len(missingroles)))**2
+        return (abs(len(self.intersection(roles, missingroles)) - len(missingroles))) ** 2
 
     def KDD(self, roles, missingroles):
         i = len(self.intersection(roles, missingroles)) + len(missingroles)
         if i == 0:
             return numpy.inf
-        return len(self.intersection(roles, missingroles)) * numpy.log2((2*len(self.intersection(roles, missingroles)))/i)
+        return len(self.intersection(roles, missingroles)) * numpy.log2(
+            (2 * len(self.intersection(roles, missingroles))) / i)
 
     def VWHD(self, roles, missingroles):
         i = min(len(self.intersection(roles, missingroles)), len(missingroles))
-        if i==0 :
+        if i == 0:
             return numpy.inf
-        return (abs(len(self.intersection(roles, missingroles)) - len(missingroles)))/i
+        return (abs(len(self.intersection(roles, missingroles)) - len(missingroles))) / i
 
     # From the K Nearest Neighbours find the best
     # hero in regards to the player in question
@@ -432,7 +435,7 @@ class KNNPlayer(Player):
             hero = dictionary.get(rated[0])
             winrate = 0
             if int(hero[2].split(':')[1]) != 0:
-                winrate = float(hero[3].split(':')[1])/float(hero[2].split(':')[1])
+                winrate = float(hero[3].split(':')[1]) / float(hero[2].split(':')[1])
             newrating.append((rated[0], winrate))
         if len(newrating) == 0:
             return int(random.sample(rating, 1)[0][0])
@@ -451,7 +454,7 @@ class KNNPlayer(Player):
     # From the list of allies creates the perfect ally
     # so we can find the hero with most similarity to it
     def perfekt(self, allies):
-        allieprofiles=[]
+        allieprofiles = []
         if allies == []:
             return HeroProfile(id=0, name="", abilities=[], roles=self.allroles, talents=[],
                                stats=[])
@@ -461,11 +464,11 @@ class KNNPlayer(Player):
         roles = self.extractroles(allieprofiles)
 
         return HeroProfile(id=0, name="", abilities=[], roles=roles, talents=[],
-                               stats=[])
+                           stats=[])
 
     # Given a list of profiles returns the list of roles
     # of every hero
-    def extractroles(self,profiles):
+    def extractroles(self, profiles):
         all = self.allroles.copy()
         for profile in profiles:
             for role in profile.Roles:
@@ -473,6 +476,7 @@ class KNNPlayer(Player):
                 if role in all:
                     all.remove(role)
         return all
+
 
 class KNNPlayer2(Player):
 
@@ -540,11 +544,11 @@ class KNNPlayer2(Player):
         return prediction
 
     def pred(self, a, n, p):
-        suma=0
+        suma = 0
         for i in range(len(a)):
             if i != p:
                 suma += a[i]
-        suma = suma/(len(a)-1)
+        suma = suma / (len(a) - 1)
         addsim = 0
         for naighbor in n:
             addsim += naighbor[1]
@@ -553,8 +557,8 @@ class KNNPlayer2(Player):
             for i in range(len(naighbor[0])):
                 if i != p:
                     sumnab += naighbor[0][i]
-            sumnab = sumnab/(len(naighbor[0]) - 1)
-            suma += (naighbor[1]/addsim)*(naighbor[0][p]-sumnab)
+            sumnab = sumnab / (len(naighbor[0]) - 1)
+            suma += (naighbor[1] / addsim) * (naighbor[0][p] - sumnab)
 
         return suma
 
@@ -603,22 +607,22 @@ class KNNPlayer2(Player):
         distance = 0.0
         for i in range(len(row1)):
             if i != predcol:
-                distance += (math.sqrt(row1[i])-math.sqrt(row2[i]))**2
+                distance += (math.sqrt(row1[i]) - math.sqrt(row2[i])) ** 2
         return distance
 
     def SED(self, row1, row2, predcol):
         distance = 0.0
         for i in range(len(row1)):
             if i != predcol:
-                distance += (row1[i] - row2[i])**2
+                distance += (row1[i] - row2[i]) ** 2
         return distance
 
     def KDD(self, row1, row2, predcol):
         distance = 0.0
         for i in range(len(row1)):
             divider = row1[i] + row2[i]
-            top = 2*row1[i]
-            if i != predcol and divider !=0 and top != 0:
+            top = 2 * row1[i]
+            if i != predcol and divider != 0 and top != 0:
                 distance += abs(row1[i] * math.log2(top / divider))
         return distance
 
@@ -634,5 +638,277 @@ class KNNPlayer2(Player):
         return distance
 
 
+class MatrixFactorizationWinratePlayer(Player):
+    def __init__(self, draft):
+        self.draft = draft
+        self.name = 'mfw'
+        self.nmf = self.startMatrix()
+        self.nmfp = self.getPlayers()
+
+    def startMatrix(self):
+        snmf = startNormalWinrateMatrixFac()
+        return snmf.start()
+
+    def getPlayers(self):
+        snmf = startNormalWinrateMatrixFac()
+        return snmf.getPlayers()
+
+    def getPlayerRed(self, movecount):
+        players = [3, 4, 7, 8, 10]
+        player = 0
+        for i in range(0, 10):
+            if movecount == players[i]:
+                if players[i] == 3:
+                    return 6
+                elif players[i] == 4:
+                    return 7
+                elif players[i] == 7:
+                    return 8
+                elif players[i] == 8:
+                    return 9
+                elif players[i] == 10:
+                    return 10
+        return player
+
+    def getPlayerBlue(self, movecount):
+        players = [3, 4, 7, 8, 10]
+        player = 0
+        for i in range(0, 10):
+            if movecount == players[i]:
+                if players[i] == 3:
+                    return 1
+                elif players[i] == 4:
+                    return 2
+                elif players[i] == 7:
+                    return 3
+                elif players[i] == 8:
+                    return 4
+                elif players[i] == 10:
+                    return 5
+        return player
+
+    def getBestId(self, nmf, nmfp, player, listOfMax):
+        maxval = 0
+        id = -1
+        i = 0
+        for x in range(0, len(nmf[player])):
+            if nmf[player][x] > maxval and nmf[player][x] not in listOfMax:
+                maxval = nmf[player][x]
+                i = x
+        if nmfp[player][i][0][1] in self.draft.avail_moves:
+            id = nmfp[player][i][0][1]
+        else:
+            listOfMax += [maxval]
+            maxval = 0
+            id = self.getBestId(nmf, nmfp, player, listOfMax)
+        return id
+
+    def get_move(self, move_type):
+        if move_type == 'ban':
+            return self.getBanMove()
+        else:
+            return self.getBestMove()
+
+    def getBestMove(self):
+        moveCount = self.draft.move_cnt
+        player = 0
+        team = self.draft.next_player
+
+        if team == 0:
+            """Red Team"""
+            player = self.getPlayerRed(moveCount[0])
+        elif team == 1:
+            """Blue Team"""
+            player = self.getPlayerBlue(moveCount[1])
+
+        if player == 1:
+            return self.getBestId(self.nmf, self.nmfp, 0, [])
+        elif player == 2:
+            return self.getBestId(self.nmf, self.nmfp, 1, [])
+        elif player == 3:
+            return self.getBestId(self.nmf, self.nmfp, 2, [])
+        elif player == 4:
+            return self.getBestId(self.nmf, self.nmfp, 3, [])
+        elif player == 5:
+            return self.getBestId(self.nmf, self.nmfp, 4, [])
+        elif player == 6:
+            return self.getBestId(self.nmf, self.nmfp, 5, [])
+        elif player == 7:
+            return self.getBestId(self.nmf, self.nmfp, 6, [])
+        elif player == 8:
+            return self.getBestId(self.nmf, self.nmfp, 7, [])
+        elif player == 9:
+            return self.getBestId(self.nmf, self.nmfp, 8, [])
+        elif player == 10:
+            return self.getBestId(self.nmf, self.nmfp, 9, [])
+
+    def getBanMove(self):
+        player = 0
+        team = self.draft.next_player
+
+        if team == 0:
+            """Red Team"""
+            player = random.randint(1, 5)
+        elif team == 1:
+            """Blue Team"""
+            player = random.randint(6, 10)
+
+        if player == 1:
+            return self.getBestId(self.nmf, self.nmfp, 0, [])
+        elif player == 2:
+            return self.getBestId(self.nmf, self.nmfp, 1, [])
+        elif player == 3:
+            return self.getBestId(self.nmf, self.nmfp, 2, [])
+        elif player == 4:
+            return self.getBestId(self.nmf, self.nmfp, 3, [])
+        elif player == 5:
+            return self.getBestId(self.nmf, self.nmfp, 4, [])
+        elif player == 6:
+            return self.getBestId(self.nmf, self.nmfp, 5, [])
+        elif player == 7:
+            return self.getBestId(self.nmf, self.nmfp, 6, [])
+        elif player == 8:
+            return self.getBestId(self.nmf, self.nmfp, 7, [])
+        elif player == 9:
+            return self.getBestId(self.nmf, self.nmfp, 8, [])
+        elif player == 10:
+            return self.getBestId(self.nmf, self.nmfp, 9, [])
 
 
+class MatrixFactorizationThresholdPlayer(Player):
+    def __init__(self, draft):
+        self.draft = draft
+        self.name = 'mfth'
+        self.tmf = self.startMatrix()
+        self.tmfp = self.getPlayers()
+
+    def get_move(self, move_type):
+        if move_type == 'ban':
+            return self.getBanMove()
+        else:
+            return self.getBestMove()
+
+    def startMatrix(self):
+        stmf = startTresholdMatrixFac()
+        return stmf.start()
+
+    def getPlayers(self):
+        stmf = startTresholdMatrixFac()
+        return stmf.getPlayers()
+
+    def getRandomID(self, x, y):
+        return random.randint(x, y)
+
+    def getPlayerRed(self, movecount):
+        players = [3, 4, 7, 8, 10]
+        player = 0
+        for i in range(0, 10):
+            if movecount == players[i]:
+                if players[i] == 3:
+                    return 6
+                elif players[i] == 4:
+                    return 7
+                elif players[i] == 7:
+                    return 8
+                elif players[i] == 8:
+                    return 9
+                elif players[i] == 10:
+                    return 10
+        return player
+
+    def getPlayerBlue(self, movecount):
+        players = [3, 4, 7, 8, 10]
+        player = 0
+        for i in range(0, 10):
+            if movecount == players[i]:
+                if players[i] == 3:
+                    return 1
+                elif players[i] == 4:
+                    return 2
+                elif players[i] == 7:
+                    return 3
+                elif players[i] == 8:
+                    return 4
+                elif players[i] == 10:
+                    return 5
+        return player
+
+    def getBestId(self, nmf, nmfp, player, listOfID):
+        i = []
+        for x in range(0, len(nmf[player])):
+            if round(nmf[player][x]) == 1 and nmf[player][x] not in listOfID:
+                i.append(x)
+
+        maxsize = len(i)
+        id = self.getRandomID(0, maxsize)
+        if nmfp[player][id][0][1] in self.draft.avail_moves:
+            playerid = nmfp[player][id][0][1]
+        else:
+            listOfID += [id]
+            playerid = self.getBestId(nmf, nmfp, player, listOfID)
+        return playerid
+
+    def getBestMove(self):
+        moveCount = self.draft.move_cnt
+        player = 0
+        team = self.draft.next_player
+
+        if team == 0:
+            """Red Team"""
+            player = self.getPlayerRed(moveCount[0])
+        elif team == 1:
+            """Blue Team"""
+            player = self.getPlayerBlue(moveCount[1])
+
+        if player == 1:
+            return self.getBestId(self.tmf, self.tmfp, 0, [])
+        elif player == 2:
+            return self.getBestId(self.tmf, self.tmfp, 1, [])
+        elif player == 3:
+            return self.getBestId(self.tmf, self.tmfp, 2, [])
+        elif player == 4:
+            return self.getBestId(self.tmf, self.tmfp, 3, [])
+        elif player == 5:
+            return self.getBestId(self.tmf, self.tmfp, 4, [])
+        elif player == 6:
+            return self.getBestId(self.tmf, self.tmfp, 5, [])
+        elif player == 7:
+            return self.getBestId(self.tmf, self.tmfp, 6, [])
+        elif player == 8:
+            return self.getBestId(self.tmf, self.tmfp, 7, [])
+        elif player == 9:
+            return self.getBestId(self.tmf, self.tmfp, 8, [])
+        elif player == 10:
+            return self.getBestId(self.tmf, self.tmfp, 9, [])
+
+    def getBanMove(self):
+        player = 0
+        team = self.draft.next_player
+
+        if team == 0:
+            """Red Team"""
+            player = random.randint(1, 5)
+        elif team == 1:
+            """Blue Team"""
+            player = random.randint(6, 10)
+
+        if player == 1:
+            return self.getBestId(self.tmf, self.tmfp, 0, [])
+        elif player == 2:
+            return self.getBestId(self.tmf, self.tmfp, 1, [])
+        elif player == 3:
+            return self.getBestId(self.tmf, self.tmfp, 2, [])
+        elif player == 4:
+            return self.getBestId(self.tmf, self.tmfp, 3, [])
+        elif player == 5:
+            return self.getBestId(self.tmf, self.tmfp, 4, [])
+        elif player == 6:
+            return self.getBestId(self.tmf, self.tmfp, 5, [])
+        elif player == 7:
+            return self.getBestId(self.tmf, self.tmfp, 6, [])
+        elif player == 8:
+            return self.getBestId(self.tmf, self.tmfp, 7, [])
+        elif player == 9:
+            return self.getBestId(self.tmf, self.tmfp, 8, [])
+        elif player == 10:
+            return self.getBestId(self.tmf, self.tmfp, 9, [])
