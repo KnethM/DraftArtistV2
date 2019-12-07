@@ -1,4 +1,4 @@
-from player import RandomPlayer, MCTSPlayer, AssocRulePlayer, HighestWinRatePlayer, KNNPlayer, MCTSPlayerSkill, \
+from player import RandomPlayer, MCTSPlayer, AssocRulePlayer, HighestWinRatePlayer, MCTSPlayerSkill, \
     KNNPlayer2, MatrixFactorizationWinratePlayer, MatrixFactorizationThresholdPlayer
 from utils.parser import parse_mcts_maxiter_c, parse_rave_maxiter_c_k
 import pickle
