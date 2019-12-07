@@ -584,6 +584,7 @@ class KNNPlayer2(Player):
         return distance
 
     def CosD(self, row1, row2, predcol):
+        distance = 0
         top = 0
         row1_squrd = 0
         row2_squrd = 0
@@ -592,7 +593,11 @@ class KNNPlayer2(Player):
                 top += row1[i]*row2[i]
                 row1_squrd += row1[i]**2
                 row2_squrd += row2[i]**2
-        return top/(math.sqrt(row1_squrd)*math.sqrt(row2_squrd))
+                if row1_squrd == 0 or row2_squrd == 0:
+                    distance += 1
+                else:
+                    distance += top/(math.sqrt(row1_squrd)*math.sqrt(row2_squrd))
+        return distance
 
     def SCD(self, row1, row2, predcol):
         distance = 0.0
@@ -621,8 +626,11 @@ class KNNPlayer2(Player):
         distance = 0.0
         for i in range(len(row1)):
             divider = min(row1[i], row2[i])
-            if i != predcol and divider != 0:
-                distance += abs(row1[i]-row2[i]/divider)
+            if i != predcol:
+                if divider != 0:
+                    distance += abs(row1[i]-row2[i]/divider)
+                else:
+                    distance += 1
         return distance
 
 
