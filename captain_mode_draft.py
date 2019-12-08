@@ -17,12 +17,13 @@ class Draft:
             self.outcome_model, self.M = self.load(env_path)
             self.outcome_model_with_skill, self.M_with_skill = self.load(env_path2)
             self.state = [[], []]
-            self.avail_moves = set(range(self.M_with_skill))
+            self.avail_moves = set(range(self.M_with_skill+1))
             self.move_cnt = [0, 0]
             self.player = None  # current player's turn
             self.next_player = 0  # next player turn
             self.controllers = [self.load_red_controllers(), self.load_blue_controllers()]
-            self.sumdur = 0
+            self.sumdur0 = 0
+            self.sumdur1 = 0
             # player 0 will pick first and be red team; player 1 will pick next and be blue team
             self.player_models = [self.construct_player_model(p0_model_str),
                                   self.construct_player_model(p1_model_str)]
@@ -47,8 +48,6 @@ class Draft:
         elif player_model_str == 'hwr':
             return HighestWinRatePlayer(draft=self)
         elif player_model_str.split("_")[0] == 'knn':
-            return KNNPlayer(draft=self, k=int(player_model_str.split("_")[1]), distance=player_model_str.split("_")[2])
-        elif player_model_str.split("_")[0] == 'knn2':
             return KNNPlayer2(draft=self, k=int(player_model_str.split("_")[1]),
                               distance=player_model_str.split("_")[2])
         elif player_model_str.startswith('mfw'):
@@ -90,20 +89,19 @@ class Draft:
     def eval(self, withcontrolers=False):
         if withcontrolers:
             assert self.end()
-            x = np.zeros((1, self.M_with_skill))
+            x = np.zeros((1, self.M_with_skill + 10))
             x[0, self.state[0]] = 1
             x[0, self.state[1]] = -1
-            winrates = [self.findwinrate(self.controllers[0][0], self.state[0][0]),
-                        self.findwinrate(self.controllers[0][1], self.state[0][1]),
-                        self.findwinrate(self.controllers[0][2], self.state[0][2]),
-                        self.findwinrate(self.controllers[0][3], self.state[0][3]),
-                        self.findwinrate(self.controllers[0][4], self.state[0][4]),
-                        self.findwinrate(self.controllers[1][0], self.state[1][0]),
-                        self.findwinrate(self.controllers[1][1], self.state[1][1]),
-                        self.findwinrate(self.controllers[1][2], self.state[1][2]),
-                        self.findwinrate(self.controllers[1][3], self.state[1][3]),
-                        self.findwinrate(self.controllers[1][4], self.state[1][4])]
-            x = np.reshape(np.append(x[0], winrates), (-1, 123))
+            x[0, -10] = self.findwinrate(self.controllers[0][0], self.state[0][0])
+            x[0, -9] = self.findwinrate(self.controllers[0][1], self.state[0][1])
+            x[0, -8] = self.findwinrate(self.controllers[0][2], self.state[0][2])
+            x[0, -7] = self.findwinrate(self.controllers[0][3], self.state[0][3])
+            x[0, -6] = self.findwinrate(self.controllers[0][4], self.state[0][4])
+            x[0, -5] = self.findwinrate(self.controllers[1][0], self.state[1][0])
+            x[0, -4] = self.findwinrate(self.controllers[1][1], self.state[1][1])
+            x[0, -3] = self.findwinrate(self.controllers[1][2], self.state[1][2])
+            x[0, -2] = self.findwinrate(self.controllers[1][3], self.state[1][3])
+            x[0, -1] = self.findwinrate(self.controllers[1][4], self.state[1][4])
             red_team_win_rate = self.outcome_model_with_skill.predict_proba(x)[0, 1]
             return red_team_win_rate
         assert self.end()
@@ -220,15 +218,15 @@ class Draft:
             return random.sample(self.controllers[1], 1)[0]
 
     def findwinrate(self, controller, heroid):
-        for hero in controller:
-            hero = hero.split(",")
-            id = int(hero[0].split(":")[1].replace('"', ''))
-            if id == heroid:
-                gameplayed = int(hero[2].split(":")[1].replace('"', ''))
-                if gameplayed == 0:
-                    return 0.0
-                return int(hero[3].split(":")[1].replace('"', '')) / gameplayed
-        return 0.0
+        #for hero in controller:
+        #    hero = hero.split(",")
+        #    id = int(hero[0].split(":")[1].replace('"', ''))
+        #    if id == heroid:
+        #        gameplayed = int(hero[2].split(":")[1].replace('"', ''))
+        #        if gameplayed == 0:
+        #            return 0.0
+        #        return int(hero[3].split(":")[1].replace('"', '')) / gameplayed
+        return controller[heroid]
 
     def calculatewinrates(self, controller):
         ratings = [0] * (self.M_with_skill + 1)

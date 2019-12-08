@@ -21,7 +21,9 @@ def experiment(match_id, p0_model_str, p1_model_str, env_path, env_path2):
         a = p.get_move(mt)
         t = time.time()
         if d.next_player == 0:
-            d.sumdur += t - t2
+            d.sumdur0 += t - t2
+        if d.next_player == 1:
+            d.sumdur1 += t - t2
         d.move(a)
         d.print_move(match_id=match_id, move_duration=t - t2, move_id=a, move_type=mt)
 
@@ -30,7 +32,7 @@ def experiment(match_id, p0_model_str, p1_model_str, env_path, env_path2):
     exp_str = 'match: {}, time: {:.3F}, p0 predicted win rate: {:.5f}' \
         .format(match_id, duration, final_red_team_win_rate)
 
-    return final_red_team_win_rate, duration, exp_str, d.sumdur/10
+    return final_red_team_win_rate, duration, exp_str, d.sumdur0/10, d.sumdur1/10
 
 
 if __name__ == '__main__':
@@ -38,30 +40,37 @@ if __name__ == '__main__':
     np.random.seed(123)
     # win rate predictor path
     env_path = 'NN_hiddenunit120_dota.pickle'
-    env_path_with_skill = 'mlp.pickle'
+    env_path_with_skill = 'Fold6_1layer.pickle'
 
     logger = logging.getLogger('mcts')
     logger.addHandler(logging.StreamHandler())
     logger.setLevel(logging.WARNING)
 
     kwargs = parse_mcts_exp_parameters()
-    # possible player string: random, hwr, mcts_maxiter_c, skillmcts_maxiter_c, assocrule ,knn_k_distancemesure
-    # red team - knn2_5_vwhd
-    p0_model_str = 'mfw' if not kwargs else kwargs.p0
-    # blue team
-    p1_model_str = 'mfth' if not kwargs else kwargs.p1
-    num_matches = 100 if not kwargs else kwargs.num_matches
+    with open("results_knneuclid_mcts600.txt", "a") as out:
+        # possible player string: random, hwr, mcts_maxiter_c, skillmcts_maxiter_c, assocrule ,knn_k_distancemesure, mfth,mfw
+        # red team
+        p0_model_str = "knn_5_euclid" if not kwargs else kwargs.p0
+        # blue team
+        p1_model_str = "mcts_600_2" if not kwargs else kwargs.p1
+        num_matches = 100 if not kwargs else kwargs.num_matches
 
-    red_team_win_rates, times, averagetimesp1 = [], [], []
-    for i in range(num_matches):
-        wr, t, s, at = experiment(i, p0_model_str, p1_model_str, env_path, env_path_with_skill)
-        red_team_win_rates.append(wr)
-        times.append(t)
-        averagetimesp1.append(at)
-        s += ', mean predicted win rate: {:.5f}, average time to make a choice: {:.5f}\n'.format(np.average(red_team_win_rates), at)
-        logger.warning(s)
+        red_team_win_rates, times, averagetimesp1, averagetimesp2 = [], [], [], []
+        for i in range(num_matches):
+            wr, t, s, at0, at1 = experiment(i, p0_model_str, p1_model_str, env_path, env_path_with_skill)
+            red_team_win_rates.append(wr)
+            times.append(t)
+            averagetimesp1.append(at0)
+            averagetimesp2.append(at1)
+            s += ', mean predicted win rate: {:.5f}, average time to make a choice for 0: {:.5f}, , average time to make a choice for 1: {:.5f}\n'.format(np.average(red_team_win_rates), at0, at1)
+            logger.warning(s)
+            if ((i+1) % 10) == 0:
+                out.write('{} matches, p0 {} vs. p1 {}. average time {:.5f}, average p0 win rate {:.5f}, std {:.5f}, average time choice for 0: {:.7f}, average time choice for 1: {:.7f}\n'
+                            .format(i+1, p0_model_str, p1_model_str,
+                            np.average(times), np.average(red_team_win_rates), np.std(red_team_win_rates),
+                            np.average(averagetimesp1), np.average(averagetimesp2)))
+                out.flush()
 
-
-    logger.warning('{} matches, p0 {} vs. p1 {}. average time {:.5f}, average p0 win rate {:.5f}, std {:.5f}, average time choice: {:.7f}'
-                   .format(num_matches, p0_model_str, p1_model_str,
-                           np.average(times), np.average(red_team_win_rates), np.std(red_team_win_rates), np.average(averagetimesp1)))
+        logger.warning('{} matches, p0 {} vs. p1 {}. average time {:.5f}, average p0 win rate {:.5f}, std {:.5f}, average time choice for 0: {:.7f}, average time choice for 1: {:.7f}'
+                       .format(num_matches, p0_model_str, p1_model_str,
+                               np.average(times), np.average(red_team_win_rates), np.std(red_team_win_rates), np.average(averagetimesp1), np.average(averagetimesp2)))
