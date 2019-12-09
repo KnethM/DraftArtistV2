@@ -129,9 +129,8 @@ def train_NN2(data, solution, picklename):
 
     pp.dump(mlpclist, open((picklename + '_2layer.pickle'), "wb"))
 
-
-
 if __name__ == '__main__':
     discretize()
+
     #Run this function aswell if you wanna train a set of new NN
     #trainNN()
