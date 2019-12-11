@@ -647,6 +647,7 @@ class MatrixFactorizationWinratePlayer(Player):
         else:
             self.nmf = self.startMatrix()
             self.nmf = self.getMatrix()
+        #self.nmf = self.startMatrix()
         self.nmfp = self.getPlayers()
 
     def startMatrix(self):

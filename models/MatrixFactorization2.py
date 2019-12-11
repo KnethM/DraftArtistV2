@@ -259,7 +259,7 @@ class normalMatrixFac():
     playersRedAndBlue = ip.getRedAndBlue()
 
     #maxsize = int(len(playerListSorted))
-    maxsize = 10
+    maxsize = 0
     blueteam = []
     redteam = []
     team = []

@@ -5,6 +5,7 @@ import random
 import numpy as np
 import time
 import logging
+from datetime import datetime
 from utils.parser import parse_mcts_exp_parameters
 from captain_mode_draft import Draft
 
@@ -46,13 +47,16 @@ if __name__ == '__main__':
     logger.addHandler(logging.StreamHandler())
     logger.setLevel(logging.WARNING)
 
+    starttime = datetime.now()
+    starttime = starttime.strftime("%H:%M:%S")
+
     kwargs = parse_mcts_exp_parameters()
     with open("results_knneuclid_mcts600.txt", "a") as out:
         # possible player string: random, hwr, mcts_maxiter_c, skillmcts_maxiter_c, assocrule ,knn_k_distancemesure, mfth,mfw
         # red team
         p0_model_str = "mfw" if not kwargs else kwargs.p0
-        # blue team
-        p1_model_str = "knn_5_euclid" if not kwargs else kwargs.p1
+        # blue team - knn_5_euclid
+        p1_model_str = "mfth" if not kwargs else kwargs.p1
         num_matches = 100 if not kwargs else kwargs.num_matches
 
         red_team_win_rates, times, averagetimesp1, averagetimesp2 = [], [], [], []
@@ -74,3 +78,7 @@ if __name__ == '__main__':
         logger.warning('{} matches, p0 {} vs. p1 {}. average time {:.5f}, average p0 win rate {:.5f}, std {:.5f}, average time choice for 0: {:.7f}, average time choice for 1: {:.7f}'
                        .format(num_matches, p0_model_str, p1_model_str,
                                np.average(times), np.average(red_team_win_rates), np.std(red_team_win_rates), np.average(averagetimesp1), np.average(averagetimesp2)))
+        currenttime = datetime.now()
+        current_time = currenttime.strftime("%H:%M:%S")
+        time = datetime.strptime(current_time, '%H:%M:%S') - datetime.strptime(starttime, '%H:%M:%S')
+        print("Time after 100 matches=", time)
