@@ -17,7 +17,7 @@ def parse_mcts_exp_parameters():
 
 
 def parse_mcts_maxiter_c(player_str):
-    assert player_str.startswith('mcts') or player_str.startswith('skillmcts')
+    assert player_str.startswith('mcts') or player_str.startswith('skillmcts') or player_str.startswith('parallelmcts')
     _, maxiter, c = player_str.split('_')
     return int(maxiter), float(c)
 

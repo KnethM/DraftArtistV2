@@ -1,5 +1,5 @@
 from player import RandomPlayer, MCTSPlayer, AssocRulePlayer, HighestWinRatePlayer, MCTSPlayerSkill, \
-    KNNPlayer2, MatrixFactorizationWinratePlayer, MatrixFactorizationThresholdPlayer
+    KNNPlayer2, MatrixFactorizationWinratePlayer, MatrixFactorizationThresholdPlayer, MCTSPlayerParallel
 from utils.parser import parse_mcts_maxiter_c, parse_rave_maxiter_c_k
 import pickle
 import logging
@@ -54,6 +54,9 @@ class Draft:
             return MatrixFactorizationWinratePlayer(draft=self)
         elif player_model_str.startswith('mfth'):
             return MatrixFactorizationThresholdPlayer(draft=self)
+        elif player_model_str.startswith('parallelmcts'):
+            max_iters, c = parse_mcts_maxiter_c(player_model_str)
+            return MCTSPlayerParallel(name=player_model_str,draft=self,maxiters=max_iters, c=c)
         else:
             raise NotImplementedError
 
