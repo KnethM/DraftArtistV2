@@ -208,8 +208,8 @@ class MCTSPlayerParallel(Player):
         q.start()
         q.join()
         p.join()"""
-        pool = mp.Pool(2)
-        future_res = [pool.apply_async(self.subfunction) for _ in range(2)]
+        pool = mp.Pool(4)
+        future_res = [pool.apply_async(self.subfunction) for _ in range(4)]
         res = [f.get() for f in future_res]
         res.sort(key=lambda t: t[1])
         pool.close()
@@ -579,17 +579,18 @@ class KNNPlayer2(Player):
     def makegrid(self):
         directory = os.fsencode("input/Players")
         grid = []
-        for file in os.listdir(directory):
-            controller = open("input/Players/" + str(os.fsdecode(file)), "r").readlines()
-            ratings = [0] * 114
-            for hero in controller:
-                hero = hero.replace('"', '').replace('\'', "").split(',')
-                id = int(hero[0].split(':')[1])
-                games = int(hero[2].split(':')[1])
-                if games != 0 and id < 114:
-                    wins = int(hero[3].split(':')[1])
-                    ratings[id] = wins / games
-            grid.append(ratings)
+        for i, file in enumerate(os.listdir(directory)):
+            if i < i+1:
+                controller = open("input/Players/" + str(os.fsdecode(file)), "r").readlines()
+                ratings = [0] * 114
+                for hero in controller:
+                    hero = hero.replace('"', '').replace('\'', "").split(',')
+                    id = int(hero[0].split(':')[1])
+                    games = int(hero[2].split(':')[1])
+                    if games != 0 and id < 114:
+                        wins = int(hero[3].split(':')[1])
+                        ratings[id] = wins / games
+                grid.append(ratings)
         return numpy.array(grid)
 
     def get_move(self, move_type):
