@@ -55,7 +55,7 @@ if __name__ == '__main__':
         # possible player string: random, hwr, mcts_maxiter_c, skillmcts_maxiter_c, assocrule ,knn_k_distancemesure, mfth,mfw
         # red team
         p0_model_str = "mfw" if not kwargs else kwargs.p0
-        # blue team - knn_5_euclid
+        # blue team
         p1_model_str = "mfth" if not kwargs else kwargs.p1
         num_matches = 100 if not kwargs else kwargs.num_matches
 

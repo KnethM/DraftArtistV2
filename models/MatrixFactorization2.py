@@ -56,7 +56,7 @@ class MF():
             self.sgd()
             mse = self.mse()
             training_process.append((i, mse))
-            if (i + 1) % 10 == 0:
+            """if (i + 1) % 10 == 0:
                 #currenttime = datetime.now()
                 #current_time = currenttime.strftime("%H:%M:%S")
                 #time = datetime.strptime(current_time, '%H:%M:%S') - datetime.strptime(self.starttime, '%H:%M:%S')
@@ -66,9 +66,7 @@ class MF():
                 currenttime = datetime.now()
                 current_time = currenttime.strftime("%H:%M:%S")
                 time = datetime.strptime(current_time, '%H:%M:%S') - datetime.strptime(self.starttime, '%H:%M:%S')
-                print("Time after 200 =", time)
-
-
+                print("Time after 200 =", time)"""
         return training_process
 
     def mse(self):
@@ -249,17 +247,13 @@ class importPlayers():
         return self.importAllPlayers()
 
 
-"List of characters that is not suitable for picks"
-charNotAbleToPick = [0, 24, 114, 119, 120, 121, 129]
-
-
 class normalMatrixFac():
     ip = importPlayers()
     playerListSorted = ip.getPlayerlistSorted()
     playersRedAndBlue = ip.getRedAndBlue()
 
     #maxsize = int(len(playerListSorted))
-    maxsize = 0
+    maxsize = 200
     blueteam = []
     redteam = []
     team = []
@@ -395,97 +389,3 @@ class startTresholdMatrixFac():
     def getPlayers(self):
         return self.pl.getPlayerlistSorted()
 
-"""
-def printTestResultnormal(test, val1, val2):
-    ip = importPlayers()
-    playerListSorted = ip.getPlayerlistSorted()
-    test1 = test[0]
-    test2 = test[9]
-
-    error1 = 0
-    count1 = 0
-    for u in range(0, len(test1)):
-        dif = test1[u] - val1[u]
-        if dif > 0 and val1[u] != 0:
-            count1 += 1
-            error1 += dif
-        elif dif < 0 and val1[u] != 0:
-            count1 += 1
-            error1 += -dif
-
-    error1 = error1 / count1
-
-    error2 = 0
-    count2 = 0
-    for t in range(0, len(test2)):
-        dif = test2[t] - val2[t]
-        if dif > 0 and val2[t] != 0:
-            count2 += 1
-            error2 += dif
-        elif dif < 0 and val2[t] != 0:
-            count2 += 1
-            error2 += -dif
-    error2 = error2 / count2
-
-    test11 = [[test1[0], playerListSorted[0][0][9][0]], [test1[12], playerListSorted[0][12][9][0]],
-              [test1[53], playerListSorted[0][53][9][0]], [test1[82], playerListSorted[0][82][9][0]]]
-    test22 = [[test2[5], playerListSorted[9][5][9][0]], [test2[64], playerListSorted[9][64][9][0]],
-              [test2[110], playerListSorted[9][110][9][0]]]
-    print()
-    print("Player Blue")
-    print(test11)
-    print(error1)
-    print()
-    print("Player Red")
-    print(test22)
-    print(error2)
-
-
-def printTestResult(test):
-    ip = importPlayers()
-    playerListSorted = ip.getPlayerlistSorted()
-    thmf = thresholdMatrixFac()
-    test1 = test[0]
-    test2 = test[9]
-    for t in range(0, len(test1)):
-        test1[t] = round(test1[t])
-    test1 = test1.astype(int)
-    for r in range(0, len(test2)):
-        test2[r] = round(test2[r])
-    test2 = test2.astype(int)
-
-    win1 = 0
-    for u in range(0, len(test1)):
-        q = round(playerListSorted[0][u][9][0])
-        if test1[u] == q and u in thmf.getValueTest(1):
-            win1 += 1
-
-    win2 = 0
-    for e in range(0, len(test2)):
-        w = round(playerListSorted[9][e][9][0])
-        if test2[e] == w and e in thmf.getValueTest(2):
-            win2 += 1
-
-    test11 = [[test1[0], round(playerListSorted[0][0][9][0])], [test1[12], round(playerListSorted[0][12][9][0])],
-              [test1[53], round(playerListSorted[0][53][9][0])], [test1[82], round(playerListSorted[0][82][9][0])]]
-    test22 = [[test2[5], round(playerListSorted[9][5][9][0])], [test2[64], round(playerListSorted[9][64][9][0])],
-              [test2[110], round(playerListSorted[9][110][9][0])]]
-    print()
-    print("Player Blue")
-    print(test11)
-    print(win1)
-    print()
-    print("Player Red")
-    print(test22)
-    print(win2)
-
-
-print()
-print("Normal matrix winrate")
-snwmf = startNormalWinrateMatrixFac()
-printTestResultnormal(snwmf.start(), snwmf.getValues(1), snwmf.getValues(10))
-print()
-print()
-print("Threshold matrix")
-stmf = startTresholdMatrixFac()
-printTestResult(stmf.start())"""

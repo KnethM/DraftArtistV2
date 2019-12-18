@@ -642,12 +642,12 @@ class MatrixFactorizationWinratePlayer(Player):
     def __init__(self, draft):
         self.draft = draft
         self.name = 'mfw'
-        if os.path.exists('mf.pickle'):
+        """if os.path.exists('mf.pickle'):
             self.nmf = self.getMatrix()
         else:
             self.nmf = self.startMatrix()
-            self.nmf = self.getMatrix()
-        #self.nmf = self.startMatrix()
+            self.nmf = self.getMatrix()"""
+        self.nmf = self.startMatrix()
         self.nmfp = self.getPlayers()
 
     def startMatrix(self):
@@ -791,8 +791,13 @@ class MatrixFactorizationThresholdPlayer(Player):
     def __init__(self, draft):
         self.draft = draft
         self.name = 'mfth'
+        """if os.path.exists('mfth.pickle'):
+            self.tmf = self.getMatrix()
+        else:
+            self.tmf = self.startMatrix()
+            self.tmf = self.getMatrix()"""
         #self.tmf = self.startMatrix()
-        self.tmf = self.getMatrix()
+        #self.tmf = self.getMatrix()
         self.tmfp = self.getPlayers()
 
     def get_move(self, move_type):
