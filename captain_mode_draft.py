@@ -1,11 +1,11 @@
 from player import RandomPlayer, MCTSPlayer, AssocRulePlayer, HighestWinRatePlayer, MCTSPlayerSkill, \
-    KNNPlayer2, MatrixFactorizationWinratePlayer, MatrixFactorizationThresholdPlayer, MCTSPlayerParallel
+    KNNPlayer2, MatrixFactorizationWinratePlayer, MatrixFactorizationThresholdPlayer, MCTSPlayerParallel, \
+    MinMaxPlayer
 from utils.parser import parse_mcts_maxiter_c, parse_rave_maxiter_c_k
 import pickle
 import logging
 import numpy as np
 import random
-
 
 class Draft:
     """
@@ -57,6 +57,10 @@ class Draft:
         elif player_model_str.startswith('parallelmcts'):
             max_iters, c = parse_mcts_maxiter_c(player_model_str)
             return MCTSPlayerParallel(name=player_model_str,draft=self,maxiters=max_iters, c=c)
+        elif player_model_str == 'minmax':
+            return MinMaxPlayer(actions=0, depth=19, maxPlayer=True, draft=self)
+        #elif player_model_str == 'minmaxV2':
+        #   return MinMaxPlayerV2(actions=0, depth=20, maxPlayer=True, draft=self)
         else:
             raise NotImplementedError
 
