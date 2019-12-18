@@ -2,8 +2,8 @@ import random
 import math
 import os
 from models.heroprofile import HeroProfile
-from models.MatrixFactorization import startNormalWinrateMatrixFac
-from models.MatrixFactorization import startTresholdMatrixFac
+from models.MatrixFactorization2 import startNormalWinrateMatrixFac
+from models.MatrixFactorization2 import startTresholdMatrixFac
 from node import Node
 import logging
 import numpy
@@ -730,6 +730,11 @@ class MatrixFactorizationWinratePlayer(Player):
     def __init__(self, draft):
         self.draft = draft
         self.name = 'mfw'
+        """if os.path.exists('mf.pickle'):
+            self.nmf = self.getMatrix()
+        else:
+            self.nmf = self.startMatrix()
+            self.nmf = self.getMatrix()"""
         self.nmf = self.startMatrix()
         self.nmfp = self.getPlayers()
 
@@ -740,6 +745,11 @@ class MatrixFactorizationWinratePlayer(Player):
     def getPlayers(self):
         snmf = startNormalWinrateMatrixFac()
         return snmf.getPlayers()
+
+    def getMatrix(self):
+        with open('mf.pickle', 'rb') as f:
+            matrix = pickle.load(f)
+        return matrix
 
     def getPlayerRed(self, movecount):
         players = [3, 4, 7, 8, 10]
@@ -783,8 +793,10 @@ class MatrixFactorizationWinratePlayer(Player):
             if nmf[player][x] > maxval and nmf[player][x] not in listOfMax:
                 maxval = nmf[player][x]
                 i = x
-        if nmfp[player][i][0][1] in self.draft.avail_moves:
-            id = nmfp[player][i][0][1]
+        #if nmfp[player][i][0][1] in self.draft.avail_moves:
+        if nmfp[player][i][0] in self.draft.avail_moves:
+            #id = nmfp[player][i][0][1]
+            id = int(nmfp[player][i][0])
         else:
             listOfMax += [maxval]
             maxval = 0
@@ -867,7 +879,13 @@ class MatrixFactorizationThresholdPlayer(Player):
     def __init__(self, draft):
         self.draft = draft
         self.name = 'mfth'
-        self.tmf = self.startMatrix()
+        """if os.path.exists('mfth.pickle'):
+            self.tmf = self.getMatrix()
+        else:
+            self.tmf = self.startMatrix()
+            self.tmf = self.getMatrix()"""
+        #self.tmf = self.startMatrix()
+        #self.tmf = self.getMatrix()
         self.tmfp = self.getPlayers()
 
     def get_move(self, move_type):
@@ -879,6 +897,11 @@ class MatrixFactorizationThresholdPlayer(Player):
     def startMatrix(self):
         stmf = startTresholdMatrixFac()
         return stmf.start()
+
+    def getMatrix(self):
+        with open('mfth.pickle', 'rb') as f:
+            matrix = pickle.load(f)
+        return matrix
 
     def getPlayers(self):
         stmf = startTresholdMatrixFac()
@@ -929,8 +952,8 @@ class MatrixFactorizationThresholdPlayer(Player):
 
         maxsize = len(i)
         id = self.getRandomID(0, maxsize)
-        if nmfp[player][id][0][1] in self.draft.avail_moves:
-            playerid = nmfp[player][id][0][1]
+        if nmfp[player][id][0] in self.draft.avail_moves:
+            playerid = int(nmfp[player][id][0])
         else:
             listOfID += [id]
             playerid = self.getBestId(nmf, nmfp, player, listOfID)
