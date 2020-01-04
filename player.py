@@ -68,22 +68,21 @@ class HighestWinRatePlayer(Player):
         move_win_rates = [(m, self.win_rate_dist[m]) for m in moves]
         best_move, best_win_rate = sorted(move_win_rates, key=lambda x: x[1])[-1]
         return best_move
-"""
+
+# Dynamic MiniMax Tree
 class MinMaxPlayerV2(Player):
-    def __init__(self, actions, depth, maxPlayer, draft):
+    def __init__(self, depth, maxPlayer, draft):
         self.depth = depth
         self.maxPlayer = maxPlayer
         self.draft = draft
         self.name = 'minmaxV2'
         self.winrates = self.getwinrate()
-        self.executor = cf.ThreadPoolExecutor(max_workers=20)
-        self.curdepth = 3
 
     def get_move(self, move_type):
         if self.draft.if_first_move():
             return self.get_first_move()
         root = Node(player=self.draft.player, untried_actions=self.draft.get_moves())
-        _, pick = self.minmax_tree(deepcopy(root.untried_actions), self.curdepth, True, move_type, 0)
+        _, pick = self.minmax_tree(deepcopy(root.untried_actions), self.depth, True, move_type, 0)
         return pick
 
     def minmax_tree(self, untried_actions, depth, maxP, move_type, action):
@@ -101,7 +100,7 @@ class MinMaxPlayerV2(Player):
                         temp.discard(i)
                         if maxP:
                             if depth == 1:
-                                processes.append(executor.submit(self.Helper, self, temp, depth-1, False, move_type, i))
+                                processes.append(executor.submit(self.minmax_tree, temp, depth-1, False, move_type, i))
                             else:
                                 newval, choice = self.minmax_tree(temp, depth-1, False, move_type, i)
                                 if value < newval:
@@ -109,7 +108,7 @@ class MinMaxPlayerV2(Player):
                                     value = newval
                         else:
                             if depth == 1:
-                                processes.append(executor.submit(self.Helper, self, temp, depth-1, True, move_type, i))
+                                processes.append(executor.submit(self.minmax_tree, temp, depth-1, True, move_type, i))
                             else:
                                 newval, newchoice = self.minmax_tree(temp, depth-1, True, move_type, i)
                                 if value > newval:
@@ -173,7 +172,7 @@ class MinMaxPlayerV2(Player):
                 dict.append(dictionary)
                 dictionary = {}
         return dict
-"""
+
 class MinMaxPlayer(Player):
 
     def __init__(self, actions, depth, maxPlayer, draft):
