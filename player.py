@@ -780,10 +780,10 @@ class KNNPlayer2(Player):
     # Make a classification prediction with neighbors
     def predict_classification(self, train, test_row, num_neighbors, predcol):
         neighbors = self.get_neighbors(train, test_row, num_neighbors, predcol)
-        prediction = self.pred(test_row, neighbors, predcol)
+        predictions = self.pred(test_row, neighbors, predcol)
         return prediction
 
-    def pred(self, a, n, p):
+    def pred(self, a, n):
         suma = 0
         for i in range(len(a)):
             if i != p:
